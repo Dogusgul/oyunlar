@@ -1,0 +1,180 @@
+/* Genel Ayarlar ve Fontlar */
+:root {
+    --bg-color: #3d352a;
+    --panel-bg: #f4f1ea;
+    --font-color: #333;
+    --border-color: #c9bba7;
+    --red-stamp: #c0392b;
+    --green-stamp: #27ae60;
+    --shadow-color: rgba(0,0,0,0.4);
+    --header-bg: #2c261e;
+}
+
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: var(--bg-color);
+    background-image: url('https://www.transparenttextures.com/patterns/wood-pattern.png');
+    color: var(--font-color);
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    box-sizing: border-box;
+}
+
+/* Ana Konteyner ve Paneller */
+.game-container { 
+    display: flex; 
+    gap: 20px; 
+    width: 100%; 
+    max-width: 1200px; 
+}
+.main-panel { 
+    flex-grow: 1; 
+    display: flex; 
+    flex-direction: column; 
+    gap: 20px; 
+}
+.sidebar-panel { 
+    flex-basis: 350px; 
+    flex-shrink: 0; 
+    position: sticky; /* Ekranda kalması için */
+    top: 20px;
+}
+
+/* Başlık ve İstatistikler */
+.game-header { background: var(--panel-bg); border: 2px solid var(--border-color); padding: 15px; text-align: center; box-shadow: 5px 5px 10px var(--shadow-color); }
+.game-header h1 { font-family: 'Special Elite', cursive; margin: 0 0 15px 0; color: var(--red-stamp); font-size: 2.5rem; }
+.stats { display: flex; justify-content: space-around; background: var(--header-bg); padding: 10px; border-radius: 5px; flex-wrap: wrap; gap: 10px;}
+.stat-item { color: var(--panel-bg); font-family: 'Special Elite', cursive; font-size: 1.1rem; }
+
+/* Sanık Dosyası ve Delil Butonu */
+.dossier, .lawbook { background: var(--panel-bg); border: 2px solid var(--border-color); padding: 20px; box-shadow: 5px 5px 10px var(--shadow-color); border-radius: 3px; }
+.dossier h2, .lawbook h3 { font-family: 'Special Elite', cursive; margin-top: 0; text-align: center; border-bottom: 2px dashed var(--border-color); padding-bottom: 10px; }
+.dossier-content { display: flex; gap: 20px; align-items: center; }
+.dossier-emoji { font-size: 6rem; width: 120px; height: 120px; display: flex; justify-content: center; align-items: center; line-height: 1; flex-shrink: 0; }
+.defendant-info p { margin: 8px 0; font-size: 0.95rem;}
+.evidence-button { 
+    display: block;
+    width: 100%;
+    margin-top: 20px;
+    padding: 10px;
+    font-family: 'Special Elite', cursive;
+    font-size: 1rem;
+    cursor: pointer;
+    background-color: #eaddc7;
+    border: 2px dashed var(--border-color);
+    border-radius: 3px;
+}
+.evidence-button:disabled { background-color: #ccc; cursor: not-allowed; }
+
+/* Karar Alanı */
+.decision-area { display: grid; grid-template-columns: 1fr 2.5fr; gap: 20px; align-items: stretch; }
+.sentencing-block { display: grid; grid-template-columns: 1fr 1fr 2fr; gap: 10px; }
+#sentence-input, #article-input {
+    font-family: 'Special Elite', cursive;
+    font-size: 24px;
+    text-align: center;
+    border: 3px solid var(--border-color);
+    background-color: #fff;
+    color: var(--font-color);
+    box-shadow: inset 2px 2px 5px rgba(0,0,0,0.2);
+    -moz-appearance: textfield;
+    border-radius: 3px;
+    width: 100%;
+    box-sizing: border-box;
+}
+#sentence-input::placeholder, #article-input::placeholder { font-size: 18px; }
+#sentence-input::-webkit-outer-spin-button, 
+#sentence-input::-webkit-inner-spin-button,
+#article-input::-webkit-outer-spin-button, 
+#article-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.decision-button { font-family: 'Special Elite', cursive; font-size: 24px; padding: 15px; border: 5px double; cursor: pointer; transition: transform 0.1s ease, box-shadow 0.2s ease; box-shadow: 5px 5px 10px var(--shadow-color); display: flex; justify-content: center; align-items: center; border-radius: 3px;}
+.decision-button:hover:not(:disabled) { transform: translateY(-3px); }
+.decision-button:active:not(:disabled) { transform: translateY(2px); box-shadow: 2px 2px 5px var(--shadow-color); }
+.guilty { background-color: var(--red-stamp); border-color: #e74c3c; color: white; }
+.innocent { background-color: var(--green-stamp); border-color: #2ecc71; color: white; }
+.decision-button:disabled { background-color: #95a5a6; border-color: #7f8c8d; cursor: not-allowed; transform: none; box-shadow: 2px 2px 5px rgba(0,0,0,0.2); }
+
+/* Kanunname ve Özel Notlar */
+.lawbook .notice {
+    background-color: #fffbe6;
+    border: 1px solid #ffeeba;
+    padding: 10px;
+    margin-bottom: 15px;
+    border-radius: 3px;
+    font-weight: bold;
+    color: #856404;
+}
+#lawbook-list { list-style-type: none; padding: 0; margin: 0; max-height: 65vh; overflow-y: auto; }
+#lawbook-list li { padding: 8px; border-bottom: 1px solid var(--border-color); font-weight: bold; }
+#lawbook-list li.is-crime { color: #a00; }
+#lawbook-list li.is-not-crime { color: #080; text-decoration: none; font-weight: normal; }
+
+/* Modal Ekranlar */
+.modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.75); justify-content: center; align-items: center; z-index: 1000; padding: 20px; box-sizing: border-box;}
+.modal-content { background: var(--panel-bg); padding: 30px; border: 5px solid var(--border-color); text-align: center; max-width: 500px; box-shadow: 0 0 30px black; width: 100%; border-radius: 5px;}
+.modal-content h2 { font-family: 'Special Elite', cursive; color: var(--red-stamp); }
+.modal-content button { font-family: 'Roboto', sans-serif; font-size: 16px; padding: 10px 20px; margin-top: 20px; cursor: pointer; background: var(--font-color); color: white; border: none; border-radius: 3px; }
+
+/* YENİ: MOBİL UYUMLULUK KODLARI */
+@media (max-width: 768px) {
+    body {
+        padding: 10px;
+    }
+
+    .game-container {
+        flex-direction: column;
+    }
+
+    .sidebar-panel {
+        position: static; /* Ekranda sabit kalma özelliğini kaldır */
+    }
+
+    #lawbook-list {
+        max-height: 30vh; /* Mobil cihazda kanunname yüksekliğini ayarla */
+    }
+
+    .dossier-content {
+        flex-direction: column; /* Sanık emojisi ve bilgilerini alt alta getir */
+        align-items: center;
+        text-align: center;
+    }
+
+    .game-header h1 {
+        font-size: 2rem;
+    }
+    
+    .stat-item {
+        font-size: 1rem;
+    }
+
+    .decision-area {
+        grid-template-columns: 1fr; /* Karar butonlarını ve alanını alt alta getir */
+    }
+
+    .sentencing-block {
+        grid-template-columns: 1fr; /* Madde, Yıl ve Mühürle'yi alt alta getir */
+    }
+
+    #sentence-input, #article-input, .decision-button {
+        font-size: 20px;
+        padding: 12px;
+    }
+}
+/* YENİ: Sanık dosyasındaki önemli bilgileri vurgulama */
+
+#defendant-crime {
+  color: var(--red-stamp);
+  font-weight: 700; /* Kalın yazı */
+}
+
+#defendant-remorse {
+  font-style: italic;
+}

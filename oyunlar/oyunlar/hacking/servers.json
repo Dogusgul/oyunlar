@@ -1,0 +1,97 @@
+[
+  {
+    "ip": "192.168.1.1",
+    "hostname": "Eğitim Sunucusu",
+    "firewall": 1,
+    "files": [
+      { "name": "notlar.txt", "size": "2 KB", "type": "text", "value": 50 },
+      { "name": "log.txt", "size": "1 KB", "type": "log", "value": 0, "content": "[SYSTEM] Sunucu başlatıldı." }
+    ]
+  },
+  {
+    "ip": "212.175.44.88",
+    "hostname": "Bağımsız Haber Sitesi",
+    "firewall": 1,
+    "files": [
+      { "name": "bot.exe", "size": "250 KB", "type": "executable", "value": 0 },
+      { "name": "hacking_tool.v2", "size": "115 KB", "type": "upgrade", "skillBonus": 1, "value": 0 },
+      { "name": "muhabir_kayitlari.aac", "size": "12.3 MB", "type": "audio", "value": 1200 },
+      { "name": "kaynak_listesi.csv", "size": "88 KB", "type": "doc", "value": 550 },
+      { "name": "log.txt", "size": "1 KB", "type": "log", "value": 0, "content": "[SYSTEM] Sunucu başlatıldı." }
+    ]
+  },
+  {
+    "ip": "64.233.160.41",
+    "hostname": "Şehir Kütüphanesi",
+    "firewall": 2,
+    "files": [
+      { "name": "dijital_arsiv.zip", "size": "150 MB", "type": "archive", "value": 2500 },
+      { "name": "uye_veritabani.db", "size": "4.5 MB", "type": "database", "value": 1800 },
+      { "name": "log.txt", "size": "1 KB", "type": "log", "value": 0, "content": "[SYSTEM] Sunucu başlatıldı." }
+    ]
+  },
+  {
+    "ip": "82.114.92.5",
+    "hostname": "E-Ticaret Platformu",
+    "firewall": 3,
+    "files": [
+      { "name": "hacking_tool.v3", "size": "160 KB", "type": "upgrade", "skillBonus": 1, "value": 0 },
+      { "name": "musteri_bilgileri.sql", "size": "22 MB", "type": "database", "value": 22000 },
+      { "name": "satis_raporlari.pdf", "size": "2.1 MB", "type": "doc", "value": 8000 },
+      { "name": "log.txt", "size": "1 KB", "type": "log", "value": 0, "content": "[SYSTEM] Sunucu başlatıldı." }
+    ]
+  },
+  {
+    "ip": "104.26.10.155",
+    "hostname": "Küçük Oyun Stüdyosu",
+    "firewall": 4,
+    "files": [
+      { "name": "oyun_kaynak_kodu.zip", "size": "89 MB", "type": "archive", "value": 35000 },
+      { "name": "oyuncu_datalari.csv", "size": "18 MB", "type": "database", "value": 18000 },
+      { "name": "konsept_cizimler.rar", "size": "112 MB", "type": "archive", "value": 12500 },
+      { "name": "log.txt", "size": "1 KB", "type": "log", "value": 0, "content": "[SYSTEM] Sunucu başlatıldı." }
+    ]
+  },
+  {
+    "ip": "35.186.238.101",
+    "hostname": "Biyoteknoloji Laboratuvarı",
+    "firewall": 6,
+    "files": [
+      { "name": "hacking_tool.v4", "size": "210 KB", "type": "upgrade", "skillBonus": 1, "value": 0 },
+      { "name": "genetik_arastirma.dat", "size": "450 MB", "type": "database", "value": 150000 },
+      { "name": "deney_sonuclari.pdf", "size": "8 MB", "type": "doc", "value": 75000 },
+      { "name": "log.txt", "size": "1 KB", "type": "log", "value": 0, "content": "[SYSTEM] Sunucu başlatıldı." }
+    ]
+  },
+  {
+    "ip": "151.101.193.69",
+    "hostname": "Yerel Banka",
+    "firewall": 8,
+    "files": [
+      { "name": "hesap_hareketleri.log", "size": "33 MB", "type": "log", "value": 55000 },
+      { "name": "musteri_kredi_bilgileri.sql", "size": "28 MB", "type": "database", "value": 250000 },
+      { "name": "log.txt", "size": "1 KB", "type": "log", "value": 0, "content": "[SYSTEM] Sunucu başlatıldı." }
+    ]
+  },
+  {
+    "ip": "23.203.144.112",
+    "hostname": "Özel Askeri Yüklenici",
+    "firewall": 15,
+    "files": [
+      { "name": "hacking_tool.v5", "size": "280 KB", "type": "upgrade", "skillBonus": 1, "value": 0 },
+      { "name": "drone_semalari.rar", "size": "250 MB", "type": "archive", "value": 500000 },
+      { "name": "operasyon_planlari.pdf", "size": "15 MB", "type": "doc", "value": 850000 },
+      { "name": "log.txt", "size": "1 KB", "type": "log", "value": 0, "content": "[SYSTEM] Sunucu başlatıldı." }
+    ]
+  },
+  {
+    "ip": "13.224.246.79",
+    "hostname": "Uluslararası Veri Merkezi",
+    "firewall": 20,
+    "files": [
+      { "name": "devlet_sirlari.zip", "size": "1.2 GB", "type": "archive", "value": 2500000 },
+      { "name": "finansal_piyasa_verileri.dat", "size": "2.5 GB", "type": "database", "value": 5000000 },
+      { "name": "log.txt", "size": "1 KB", "type": "log", "value": 0, "content": "[SYSTEM] Sunucu başlatıldı." }
+    ]
+  }
+]

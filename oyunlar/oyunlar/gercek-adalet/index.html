@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GERÇEK ADALET</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="game-container">
+        <main class="main-panel">
+            <header class="game-header">
+                <h1>GERÇEK ADALET</h1>
+                <div class="stats">
+                    <div class="stat-item">GÜN: <span id="day-counter">1</span></div>
+                    <div class="stat-item">YANLIŞ KARAR: <span id="mistake-counter">0</span> / 3</div>
+                    <div class="stat-item">DAVA NO: <span id="case-counter">1</span> / 12</div>
+                </div>
+            </header>
+            
+            <div class="dossier" id="dossier">
+                <h2>SANIK DOSYASI</h2>
+                <div class="dossier-content">
+                    <div id="defendant-emoji" class="dossier-emoji"></div>
+                    <div class="defendant-info">
+                        <p><strong>Adı Soyadı:</strong> <span id="defendant-name">Yükleniyor...</span></p>
+                        <p><strong>Yaş:</strong> <span id="defendant-age">...</span></p>
+                        <p><strong>Meslek:</strong> <span id="defendant-occupation">...</span></p>
+                        <p><strong>Medeni Hal:</strong> <span id="defendant-marital-status">...</span></p>
+                        <p><strong>İsnat Edilen Suç:</strong> <span id="defendant-crime">Yükleniyor...</span></p>
+                        <p><strong>Pişmanlık Durumu:</strong> <span id="defendant-remorse">Yükleniyor...</span></p>
+                    </div>
+                </div>
+                <button id="evidence-button" class="evidence-button">✉️ Delilleri İncele</button>
+            </div>
+
+            <div class="decision-area">
+                <button id="innocent-button" class="decision-button innocent">MASUM</button>
+                <div class="sentencing-block">
+                    <input type="number" id="article-input" min="0" placeholder="Madde">
+                    <input type="number" id="sentence-input" min="0" placeholder="Yıl">
+                    <button id="stamp-button" class="decision-button guilty" disabled>MÜHÜRLE</button>
+                </div>
+            </div>
+        </main>
+
+        <aside class="sidebar-panel">
+            <div class="lawbook">
+                <h3>KANUNNAME</h3>
+				<div id="lawbook-notices"></div>
+                <ul id="lawbook-list"></ul>
+            </div>
+        </aside>
+    </div>
+
+    <div id="event-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 id="modal-title">ÖZEL BİLDİRİM</h2>
+            <p id="modal-message">Mesaj içeriği buraya gelecek.</p>
+            <button id="modal-close-button">Anlaşıldı!</button>
+        </div>
+    </div>
+
+    <div id="lose-screen" class="modal-overlay">
+        <div class="modal-content">
+            <h2>HAPSE DÜŞTÜN!</h2>
+            <p>Verdiğin yanlış kararlar yüzünden GERÇEK ADALET seni de buldu. Görevine son verildi.</p>
+            <button id="restart-button">Yeniden Başla</button>
+        </div>
+    </div>
+	
+	<div id="end-of-day-screen" class="modal-overlay">
+        <div class="modal-content">
+            <h2>Gün Sona Erdi</h2>
+            <p>Bugünlük bu kadar yeter. Verdiğin kararlar ve sağladığın adalet için teşekkürler. Hazır olduğunda yeni güne başla.</p>
+            <button id="new-day-button">Yeni Güne Başla</button>
+        </div>
+    </div>
+
+    <div id="evidence-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 id="evidence-modal-title">DELİL RAPORU</h2>
+            <p id="evidence-modal-message">Delil metni buraya gelecek.</p>
+            <button id="evidence-modal-close-button">Dosyaya Dön</button>
+        </div>
+    </div>
+
+    <audio id="sound-stamp" src="sounds/stamp.mp3"></audio>
+    <audio id="sound-papers" src="sounds/papers.mp3"></audio>
+    <audio id="sound-theme" src="sounds/theme.mp3" loop></audio>
+
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,373 @@
+/* --- TEMEL AYARLAR --- */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #333;
+    color: #FFF;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+/* --- OYUN ALANI --- */
+#game-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    background-color: #708D23;
+}
+
+/* --- KULLANICI ARAYÜZÜ (UI) PANELLERİ --- */
+
+/* 1. Üst Bilgi Paneli */
+#info-panel {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: space-around;
+    background-color: rgba(0, 0, 0, 0.7);
+    padding: 8px 10px;
+    box-sizing: border-box;
+    z-index: 10;
+    flex-wrap: wrap;
+}
+
+.info-item {
+    display: flex;
+    align-items: center;
+    padding: 5px 10px;
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+.info-item span:first-child {
+    font-weight: bold;
+    margin-right: 5px;
+    color: #AAA;
+}
+
+#budget-display.negative {
+    color: #E53935;
+    font-weight: bold;
+}
+
+/* 2. Oyun Kontrolleri */
+#game-controls {
+    position: absolute;
+    top: 50px;
+    left: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 10;
+}
+
+#speed-controls,
+#save-load-controls {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(0,0,0,0.6);
+    padding: 5px;
+    border-radius: 5px;
+}
+
+#speed-controls button,
+#save-load-controls button,
+.control-button {
+    background-color: rgba(0, 0, 0, 0.6);
+    color: white;
+    border: 1px solid #777;
+    padding: 8px 10px;
+    cursor: pointer;
+    font-size: 14px;
+    border-radius: 4px;
+}
+#speed-controls button {
+    width: 35px;
+    height: 35px;
+    font-size: 16px;
+}
+
+#speed-controls button:hover,
+#save-load-controls button:hover,
+.control-button:hover {
+    background-color: rgba(0, 0, 0, 0.8);
+}
+
+#speed-controls button.active {
+    background-color: #4CAF50;
+    border-color: #FFF;
+}
+
+#policy-button {
+    background-color: rgba(74, 144, 226, 0.7);
+    border-color: #4A90E2;
+    margin-top: 5px;
+}
+#policy-button:hover {
+     background-color: rgba(74, 144, 226, 0.9);
+}
+
+/* 3. İnşa Menüsü */
+#build-menu {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    background-color: rgba(0, 0, 0, 0.7);
+    padding: 10px;
+    border-radius: 10px 10px 0 0;
+    z-index: 10;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.tool-button {
+    background-color: #555;
+    color: white;
+    border: 2px solid #888;
+    padding: 10px 12px;
+    margin: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    border-radius: 5px;
+    min-width: 60px;
+    text-align: center;
+    position: relative;
+}
+
+.tool-button:hover {
+    background-color: #777;
+    border-color: #AAA;
+}
+
+.tool-button.active {
+    background-color: #4A90E2;
+    border-color: #FFF;
+    box-shadow: 0 0 10px #4A90E2;
+}
+
+.menu-divider {
+    width: 2px;
+    background-color: #666;
+    margin: 5px 8px;
+}
+
+/* 4. Navigasyon Kontrolleri */
+#navigation-controls {
+    position: absolute;
+    bottom: 80px;
+    right: 15px;
+    display: grid;
+    grid-template-columns: 40px 40px 40px;
+    grid-template-rows: 40px 40px 40px;
+    gap: 5px;
+    z-index: 10;
+    opacity: 0.8;
+}
+
+#navigation-controls button {
+    background-color: rgba(0, 0, 0, 0.6);
+    color: white;
+    border: 1px solid #777;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+#navigation-controls button:hover {
+    background-color: rgba(0, 0, 0, 0.8);
+}
+
+#zoom-in { grid-column: 1; grid-row: 1; }
+#zoom-out { grid-column: 1; grid-row: 2; }
+#pan-up { grid-column: 2; grid-row: 1; }
+#pan-left { grid-column: 1; grid-row: 3; }
+#pan-right { grid-column: 3; grid-row: 3; }
+#pan-down { grid-column: 2; grid-row: 3; }
+
+/* Karo Bilgi Penceresi */
+#tile-info-popup {
+    position: absolute;
+    top: 50px;
+    right: 10px;
+    width: 200px;
+    background-color: rgba(0, 0, 0, 0.85);
+    border: 1px solid #999;
+    border-radius: 5px;
+    z-index: 20;
+    padding: 10px;
+    box-sizing: border-box;
+    color: #FFF;
+}
+#tile-info-popup.hidden { display: none; }
+#tile-info-popup h4 { margin: 0 0 10px 0; padding-bottom: 5px; border-bottom: 1px solid #555; font-size: 16px; }
+#tile-info-content { font-size: 14px; }
+#tile-info-content p { margin: 5px 0; }
+#close-info-popup { position: absolute; top: 5px; right: 5px; background: #555; color: #FFF; border: none; border-radius: 50%; width: 20px; height: 20px; cursor: pointer; font-weight: bold; line-height: 18px; text-align: center; }
+#close-info-popup:hover { background: #888; }
+
+/* Talep Paneli */
+#demand-panel {
+    position: absolute;
+    bottom: 80px;
+    left: 15px;
+    display: flex;
+    gap: 10px;
+    z-index: 10;
+    background: rgba(0, 0, 0, 0.5);
+    padding: 10px;
+    border-radius: 5px;
+    align-items: flex-end;
+}
+.demand-bar-container { display: flex; align-items: center; gap: 5px; flex-direction: column; } /* Düzeltildi: center */
+.demand-bar-container span { font-weight: bold; font-size: 14px; width: 40px; text-align: center; color: #ccc; margin-bottom: 3px;} /* Boşluk eklendi */
+.demand-bar { width: 25px; height: 100px; background: #333; border: 1px solid #777; display: flex; flex-direction: column; justify-content: flex-end; }
+.demand-bar-fill { width: 100%; transition: height 0.3s ease; }
+#r-demand { background-color: #4CAF50; }
+#c-demand { background-color: #4A90E2; }
+#i-demand { background-color: #FBC02D; }
+
+/* Politika Paneli (Modal) */
+#policy-panel-modal {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background-color: rgba(0, 0, 0, 0.8); z-index: 100;
+    display: flex; justify-content: center; align-items: center;
+}
+#policy-panel-modal.hidden { display: none; }
+#policy-panel {
+    width: 90%; max-width: 600px; background: #2d2d2d;
+    border: 2px solid #888; border-radius: 10px; padding: 20px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5); position: relative; color: #FFF;
+}
+#policy-panel h2 { margin: 0 0 20px 0; text-align: center; border-bottom: 1px solid #555; padding-bottom: 10px; }
+#close-policy-panel { position: absolute; top: 10px; right: 10px; background: #555; color: #FFF; border: none; border-radius: 50%; width: 25px; height: 25px; cursor: pointer; font-weight: bold; line-height: 25px; text-align: center; }
+#close-policy-panel:hover { background: #888; }
+.policy-section { margin-bottom: 20px; }
+.policy-section h3 { margin: 0 0 15px 0; color: #AAA; }
+.slider-container { margin-bottom: 15px; }
+.slider-container label { display: block; margin-bottom: 5px; font-size: 14px; }
+.slider-container label span { float: right; font-weight: bold; color: #FFF; }
+.slider { -webkit-appearance: none; width: 100%; height: 10px; border-radius: 5px; background: #555; outline: none; }
+.slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 20px; height: 20px; border-radius: 50%; background: #4A90E2; cursor: pointer; }
+.slider::-moz-range-thumb { width: 20px; height: 20px; border-radius: 50%; background: #4A90E2; cursor: pointer; }
+
+/* Yardım İkonları ve Kutusu */
+.help-icon {
+    display: inline-block; background-color: #4A90E2; color: white; border-radius: 50%;
+    width: 16px; height: 16px; line-height: 16px; text-align: center;
+    font-size: 12px; font-weight: bold; cursor: help; margin-left: 5px; user-select: none;
+}
+.inline-help { margin-left: 3px; position: relative; top: -1px; }
+#help-tooltip {
+    position: absolute; background-color: rgba(0, 0, 0, 0.9); border: 1px solid #ccc;
+    color: white; padding: 10px; border-radius: 5px; font-size: 13px;
+    max-width: 250px; z-index: 110; pointer-events: none;
+}
+#help-tooltip.hidden { display: none; }
+
+/* Genel Modal Stilleri */
+.modal-overlay { /* Tutorial Prompt, Confirmation için */
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background-color: rgba(0, 0, 0, 0.7); z-index: 90;
+    display: flex; justify-content: center; align-items: center;
+}
+.modal-content {
+    background: #3a3a3a; padding: 20px; border-radius: 8px; border: 1px solid #666;
+    text-align: center; max-width: 400px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+}
+.modal-content h3 { margin-top: 0; color: #eee; }
+.modal-content p { margin-bottom: 20px; color: #ccc; }
+.modal-content button {
+    background: #4A90E2; color: white; border: none; padding: 10px 15px;
+    border-radius: 5px; cursor: pointer; margin: 5px; font-size: 14px;
+}
+.modal-content button:hover { background: #5aa1f0; }
+.modal-overlay.hidden { display: none; }
+
+/* Eğitici Mod Penceresi (GÜNCELLENDİ) */
+#tutorial-modal {
+    /* Genel modal overlay stilini kullan */
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background-color: rgba(0, 0, 0, 0.7); z-index: 95;
+    display: flex; justify-content: center; align-items: center; /* Ortala */
+}
+#tutorial-modal.hidden { display: none; } /* Gizleme sınıfı */
+
+#tutorial-content {
+    background: #3a3a3a; padding: 20px; border-radius: 8px; border: 1px solid #666;
+    text-align: left; /* Metni sola yasla */
+    max-width: 500px; /* Genişliği sınırla */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+    color: #eee; /* Metin rengi */
+}
+#tutorial-content #tutorial-title { text-align: center; margin-top: 0; border-bottom: 1px solid #555; padding-bottom: 10px; margin-bottom: 15px; }
+#tutorial-content p { color: #ccc; line-height: 1.5; } /* Okunabilirliği artır */
+#tutorial-buttons { text-align: center; margin-top: 20px; }
+#tutorial-buttons button { /* Genel modal button stilini kullan */
+    background: #4A90E2; color: white; border: none; padding: 10px 15px;
+    border-radius: 5px; cursor: pointer; margin: 5px; font-size: 14px;
+}
+#tutorial-buttons button:hover { background: #5aa1f0; }
+#tutorial-prev { background-color: #666; }
+#tutorial-skip { background-color: #c9302c; }
+#tutorial-prev:disabled { background-color: #444; cursor: default; } /* Devre dışı butonu */
+
+/* Eğitici Mod Vurgusu */
+.tutorial-highlight {
+    outline: 3px solid yellow;
+    box-shadow: 0 0 15px yellow;
+    transition: outline 0.3s ease, box-shadow 0.3s ease;
+    z-index: 96; /* Vurgulanan eleman öne çıksın */
+    position: relative; /* z-index için */
+}
+
+
+/* Mobil Cihaz Uyarlamaları */
+@media (max-width: 768px) {
+    #info-panel { justify-content: flex-start; padding: 5px; }
+    .info-item { font-size: 12px; padding: 3px 5px; }
+
+    #game-controls {
+        top: auto; bottom: 120px; left: 5px; flex-direction: row;
+        align-items: center; background: rgba(0,0,0,0.6); padding: 5px;
+        border-radius: 5px; width: auto;
+    }
+    #speed-controls { order: 1; padding: 0; background: none; }
+    #save-load-controls { order: 2; padding: 0; background: none; }
+    #policy-button { order: 3; margin-top: 0; height: 35px; }
+    #speed-controls button, #save-load-controls button, #policy-button { font-size: 12px; padding: 6px 8px; height: 35px;} /* Boyutları eşitle */
+    #speed-controls button { width: 30px; height: 30px; font-size: 14px;}
+
+    #build-menu { width: 100%; bottom: 0; left: 0; transform: none; border-radius: 0; padding: 5px; justify-content: center; }
+    .tool-button { padding: 8px 5px; margin: 2px; font-size: 11px; min-width: 45px; }
+    .menu-divider { margin: 2px 4px; }
+
+    #navigation-controls { bottom: 65px; right: 5px; }
+
+    #demand-panel {
+        bottom: auto; top: 60px; left: 50%; transform: translateX(-50%);
+        padding: 5px; gap: 5px;
+    }
+    .demand-bar { width: 20px; height: 60px; }
+    .demand-bar-container span { font-size: 12px; width: 35px;}
+
+    #policy-panel { width: 95%; padding: 10px; }
+    #policy-panel h2 { font-size: 18px; }
+
+    #tile-info-popup {
+        top: 130px; right: auto; left: 50%; transform: translateX(-50%);
+        width: 90%; max-width: 250px;
+    }
+
+    /* Modallar Mobil */
+    .modal-content, #tutorial-content { width: 90%; }
+}

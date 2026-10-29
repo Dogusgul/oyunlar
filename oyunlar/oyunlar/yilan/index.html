@@ -1,0 +1,1464 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NEON OUROBOROS | Final Edition</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=VT323&display=swap');
+
+        :root {
+            --bg-color: #050505;
+            --neon-green: #00ff88;
+            --neon-blue: #00d2ff;
+            --neon-pink: #ff0055;
+            --neon-yellow: #f5ff00;
+            --neon-purple: #bd00ff;
+            --neon-red: #ff0000;
+            --ui-font: 'Orbitron', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: #fff;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            font-family: var(--ui-font);
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
+        }
+
+        /* CRT Overlay */
+        #crt-overlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none; z-index: 100;
+            animation: flicker 0.15s infinite;
+        }
+        @keyframes flicker { 0% { opacity: 0.95; } 100% { opacity: 1; } }
+
+        #game-wrapper {
+            position: relative;
+            border: 2px solid #333;
+            box-shadow: 0 0 50px rgba(0, 255, 136, 0.1);
+        }
+
+        canvas { background-color: #0a0a0a; display: block; }
+
+        .shake { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+
+        /* UI Layer & HUD */
+        #ui-layer {
+            position: absolute; top: -60px; width: 100%;
+            display: flex; justify-content: space-between;
+            font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;
+        }
+        .hud-group { display: flex; gap: 5px; }
+        .hud-box {
+            background: rgba(0, 0, 0, 0.8); border: 1px solid #333; padding: 5px 10px;
+            color: var(--neon-green); box-shadow: 0 0 10px rgba(0, 255, 136, 0.1);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            min-width: 60px; transition: all 0.3s;
+        }
+        .hud-label { font-size: 0.5rem; color: #888; margin-bottom: 2px; }
+        .hud-val { font-size: 1rem; font-weight: bold; }
+        #multiplier-box { border-color: var(--neon-purple); color: var(--neon-purple); }
+
+        #status-container {
+            position: absolute; top: 10px; right: 10px;
+            display: flex; flex-direction: column; gap: 5px; align-items: flex-end; z-index: 10;
+        }
+        .status-msg {
+            font-size: 0.7rem; padding: 4px 8px;
+            background: rgba(0,0,0,0.7); border: 1px solid #fff; animation: fadeIn 0.5s;
+        }
+        .status-msg.negative { border-color: var(--neon-red); color: var(--neon-red); }
+        .status-msg.positive { border-color: var(--neon-yellow); color: var(--neon-yellow); }
+        .status-msg.info { border-color: var(--neon-blue); color: var(--neon-blue); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+
+        #center-alert {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 2.5rem; color: var(--neon-pink); text-shadow: 0 0 20px red;
+            display: none; z-index: 55; pointer-events: none;
+            animation: pulse 0.5s infinite; white-space: nowrap; text-align: center;
+        }
+        @keyframes pulse { 0% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); } 50% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); } 100% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); } }
+
+        /* Upgrade Screen */
+        #upgrade-screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95); display: none; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 50;
+        }
+        #upgrade-screen h2 { color: var(--neon-yellow); font-size: 1.5rem; margin-bottom: 20px; text-shadow: 0 0 20px var(--neon-yellow); }
+        .cards-container { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+        
+        .card {
+            width: 90px; height: 140px; 
+            border: 2px solid #333; background: #111; padding: 8px;
+            cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column;
+            align-items: center; text-align: center; justify-content: space-between;
+        }
+        .card:active { transform: scale(0.95); }
+        .card:hover { border-color: #fff; box-shadow: 0 0 20px rgba(255,255,255,0.2); }
+        .card-title { font-weight: bold; font-size: 0.8rem; margin-bottom: 5px; line-height: 1.1; }
+        
+        .card-desc { font-size: 1.15rem; color: #ccc; font-family: 'VT323', monospace; line-height: 0.9; overflow: hidden; }
+        .card-type { font-size: 0.6rem; padding: 2px 4px; border-radius: 4px; background: #222; color: #fff; margin-top: 2px; }
+
+        .card[data-rarity="common"] .card-title { color: var(--neon-green); }
+        .card[data-rarity="uncommon"] .card-title { color: var(--neon-blue); }
+        .card[data-rarity="rare"] .card-title { color: var(--neon-purple); }
+        .card[data-rarity="legendary"] .card-title { color: var(--neon-yellow); }
+        .card[data-rarity="legendary"] { border-color: var(--neon-yellow); }
+        .card[data-rarity="risk"] .card-title { color: var(--neon-pink); }
+        .card[data-rarity="risk"] { border-color: var(--neon-pink); }
+
+        /* Game Over & Menu */
+        #game-over-screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95); display: none; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 60; text-align: center;
+        }
+        #game-over-screen h1 { color: var(--neon-pink); font-size: 3rem; margin: 0; }
+        
+        .menu-btn {
+            margin-top: 15px; padding: 15px 30px; background: transparent;
+            border: 2px solid var(--neon-green); color: var(--neon-green);
+            font-family: var(--ui-font); font-size: 1.2rem; cursor: pointer;
+            width: 250px; text-align: center; transition: all 0.2s;
+        }
+        .menu-btn:hover { background: rgba(0, 255, 136, 0.1); box-shadow: 0 0 15px var(--neon-green); }
+        .menu-btn.secondary { border-color: var(--neon-blue); color: var(--neon-blue); }
+        .menu-btn.secondary:hover { background: rgba(0, 210, 255, 0.1); box-shadow: 0 0 15px var(--neon-blue); }
+        
+        .menu-btn.danger { border-color: var(--neon-red); color: var(--neon-red); font-size: 1rem; padding: 10px 20px; margin-top: 30px; }
+        .menu-btn.danger:hover { background: rgba(255, 0, 0, 0.1); box-shadow: 0 0 15px var(--neon-red); }
+
+        #wall-timer-bar { position: absolute; bottom: 0; left: 0; height: 5px; background: var(--neon-pink); width: 0%; transition: width 0.1s linear; }
+
+        /* Main Menu */
+        #main-menu {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(5, 5, 5, 0.98); display: flex; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 70;
+        }
+        .game-title {
+            font-family: 'Orbitron', sans-serif; font-size: 2.5rem; 
+            background: linear-gradient(to bottom, #fff, #888); -webkit-background-clip: text;
+            color: transparent; text-shadow: 0 0 20px var(--neon-green);
+            margin-bottom: 10px; text-align: center; letter-spacing: 2px;
+        }
+        .menu-score-box {
+            font-size: 1.2rem; color: var(--neon-blue); margin-bottom: 30px;
+            border: 1px solid var(--neon-blue); padding: 10px 20px;
+            box-shadow: 0 0 15px rgba(0, 210, 255, 0.2); text-transform: uppercase;
+        }
+        #new-record-badge {
+            display: none; background: var(--neon-yellow); color: #000;
+            padding: 5px 15px; font-weight: 900; font-size: 1.2rem;
+            animation: blink 0.5s infinite; margin-bottom: 15px;
+            transform: rotate(-3deg); border: 2px solid #fff; box-shadow: 0 0 20px var(--neon-yellow);
+        }
+        @keyframes blink { 0%, 100% { opacity: 1; transform: rotate(-3deg) scale(1); } 50% { opacity: 0.7; transform: rotate(-3deg) scale(1.1); } 100% { opacity: 0.5; transform: rotate(-3deg) scale(1); } }
+
+        /* Settings Screen & Achievements Screen */
+        #settings-screen, #achievements-screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(5, 5, 5, 0.98); display: none; flex-direction: column;
+            align-items: center; z-index: 80; padding: 20px; box-sizing: border-box;
+            overflow-y: auto;
+        }
+        .settings-section, .achievement-section {
+            border: 1px solid #333; padding: 20px; margin-bottom: 20px;
+            width: 100%; max-width: 400px; background: rgba(0,0,0,0.5);
+        }
+        .settings-section h3 { color: var(--neon-blue); margin-top: 0; text-align: center; border-bottom: 1px solid #333; padding-bottom: 10px; }
+        
+        .key-row {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;
+        }
+        .key-bind-btn {
+            background: #111; border: 1px solid var(--neon-green); color: #fff;
+            padding: 5px 15px; font-family: 'Orbitron'; cursor: pointer; min-width: 80px;
+        }
+        .key-bind-btn.listening { background: var(--neon-pink); border-color: #fff; animation: pulse 0.5s infinite; }
+
+        #mobile-edit-info { font-size: 0.8rem; color: #888; text-align: center; margin-bottom: 10px; }
+        .edit-mode-btn {
+            background: #222; border: 1px dashed var(--neon-yellow); color: var(--neon-yellow);
+            padding: 10px; width: 100%; cursor: pointer; text-align: center;
+        }
+
+        /* Sliders */
+        .slider-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+        .slider-label { font-size: 0.9rem; color: #ccc; }
+        input[type=range] {
+            -webkit-appearance: none; width: 60%; background: #222; height: 6px; border-radius: 3px; outline: none;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none; width: 16px; height: 16px; background: var(--neon-green); border-radius: 50%; cursor: pointer;
+        }
+
+        /* Mobile Controls - Absolute Positioning */
+        #mobile-controls-layer {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 90; display: none; /* Hidden by default */
+        }
+        
+        #mobile-controls-layer.editing { display: block; background: rgba(0,0,0,0.5); pointer-events: auto; }
+        
+        #close-edit-btn {
+            position: absolute; top: 20px; left: 20px;
+            width: 40px; height: 40px; background: var(--neon-red); color: #fff;
+            border: 2px solid #fff; border-radius: 50%;
+            display: none; justify-content: center; align-items: center;
+            font-weight: bold; font-size: 1.2rem; cursor: pointer; pointer-events: auto;
+            box-shadow: 0 0 15px var(--neon-red);
+        }
+        #mobile-controls-layer.editing #close-edit-btn { display: flex; }
+
+        .control-btn {
+            position: absolute;
+            width: 60px; height: 60px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 1.5rem; color: rgba(255, 255, 255, 0.7);
+            user-select: none; pointer-events: auto;
+            touch-action: none; 
+            cursor: grab;
+        }
+        .control-btn:active { background: rgba(0, 255, 136, 0.3); border-color: var(--neon-green); color: #fff; }
+        .control-btn.editing { border-color: var(--neon-yellow); border-style: dashed; background: rgba(255, 255, 0, 0.1); }
+        .control-btn.editing:active { cursor: grabbing; }
+
+        /* Achievements Styling */
+        .ach-item {
+            background: rgba(0,0,0,0.8); border: 1px solid #333; padding: 10px; margin-bottom: 10px;
+            display: flex; align-items: center; gap: 15px; opacity: 0.5; transition: all 0.3s;
+        }
+        .ach-item.unlocked { opacity: 1; border-color: var(--neon-green); box-shadow: 0 0 10px rgba(0,255,136,0.1); }
+        .ach-icon { font-size: 1.5rem; color: #888; width: 40px; text-align: center; }
+        .ach-item.unlocked .ach-icon { color: var(--neon-yellow); text-shadow: 0 0 10px var(--neon-yellow); }
+        .ach-content { flex: 1; }
+        .ach-title { font-weight: bold; color: var(--neon-blue); font-size: 0.9rem; }
+        .ach-desc { font-size: 0.8rem; color: #ccc; font-family: 'VT323'; }
+
+        #achievement-unlock-screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95); display: none; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 65; pointer-events: none;
+        }
+        .unlock-box {
+            background: #111; border: 2px solid var(--neon-yellow); padding: 20px;
+            text-align: center; width: 80%; max-width: 300px; box-shadow: 0 0 30px var(--neon-yellow);
+            animation: popIn 0.5s; pointer-events: auto;
+        }
+        @keyframes popIn { 0% { transform: scale(0); } 70% { transform: scale(1.1); } 100% { transform: scale(1); } }
+
+    </style>
+</head>
+<body>
+
+    <div id="crt-overlay"></div>
+
+    <div id="game-wrapper">
+        
+        <!-- Main Menu -->
+        <div id="main-menu">
+            <h1 class="game-title">OUROBOROS</h1>
+            <div class="menu-score-box" style="margin-top: 20px;">EN YÜKSEK SKOR: <span id="menu-high-score">0</span></div>
+            <button class="menu-btn" onclick="startGame()">SİSTEMİ BAŞLAT</button>
+            <button class="menu-btn secondary" onclick="openAchievements()">BAŞARIMLAR</button>
+            <button class="menu-btn secondary" onclick="openSettings()">AYARLAR</button>
+        </div>
+
+        <!-- Settings Screen -->
+        <div id="settings-screen">
+            <h2 style="color:var(--neon-blue);">SİSTEM YAPILANDIRMASI</h2>
+            
+            <div class="settings-section">
+                <h3>SES AYARLARI</h3>
+                <div class="slider-row">
+                    <span class="slider-label">MÜZİK</span>
+                    <input type="range" id="music-volume" min="0" max="1" step="0.1" oninput="updateAudioSettings()">
+                </div>
+                <div class="slider-row">
+                    <span class="slider-label">EFEKTLER</span>
+                    <input type="range" id="sfx-volume" min="0" max="1" step="0.1" oninput="updateAudioSettings()">
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h3>KLAVYE KONTROLLERİ</h3>
+                <div class="key-row"><span>YUKARI</span> <button class="key-bind-btn" id="btn-bind-up" onclick="remapKey('up')">W</button></div>
+                <div class="key-row"><span>AŞAĞI</span> <button class="key-bind-btn" id="btn-bind-down" onclick="remapKey('down')">S</button></div>
+                <div class="key-row"><span>SOL</span> <button class="key-bind-btn" id="btn-bind-left" onclick="remapKey('left')">A</button></div>
+                <div class="key-row"><span>SAĞ</span> <button class="key-bind-btn" id="btn-bind-right" onclick="remapKey('right')">D</button></div>
+            </div>
+
+            <div class="settings-section">
+                <h3>DOKUNMATİK KONTROLLER</h3>
+                <p id="mobile-edit-info">Oyun ekranında tuşların yerini ayarlamak için tıkla.</p>
+                <button class="edit-mode-btn" onclick="toggleMobileEdit(true)">DÜZENLEME MODUNU AÇ</button>
+            </div>
+
+            <button class="menu-btn" onclick="saveAndCloseSettings()">KAYDET & ÇIK</button>
+            
+            <button class="menu-btn danger" onclick="resetToDefaults()">VARSAYILANLARA DÖN</button>
+        </div>
+
+        <!-- Achievements Screen -->
+        <div id="achievements-screen">
+            <h2 style="color:var(--neon-yellow);">SİSTEM BAŞARIMLARI</h2>
+            <div id="ach-list" style="width: 100%; max-width: 400px;">
+                <!-- Filled by JS -->
+            </div>
+            <button class="menu-btn" onclick="closeAchievements()">GERİ DÖN</button>
+        </div>
+
+        <!-- Achievement Unlock Popup (Overlay) -->
+        <div id="achievement-unlock-screen">
+            <div class="unlock-box">
+                <div style="font-size: 3rem; margin-bottom: 10px;">🏆</div>
+                <h3 style="color: var(--neon-yellow); margin: 0 0 5px 0;">BAŞARIM AÇILDI!</h3>
+                <div id="unlock-title" style="font-weight: bold; color: #fff; font-size: 1.2rem; margin-bottom: 5px;"></div>
+                <div id="unlock-desc" style="color: #aaa; font-size: 0.9rem;"></div>
+            </div>
+        </div>
+
+        <!-- HUD -->
+        <div id="ui-layer">
+            <div class="hud-group">
+                <div class="hud-box"><span class="hud-label">LEVEL</span><span class="hud-val" id="level-disp">1</span></div>
+                <div class="hud-box"><span class="hud-label">XP</span><span class="hud-val" id="xp-disp">0/5</span></div>
+            </div>
+            <div class="hud-group">
+                <div class="hud-box" id="multiplier-box"><span class="hud-label">ÇARPAN</span><span class="hud-val">x<span id="mult-disp">1.0</span></span></div>
+                <div class="hud-box"><span class="hud-label">SKOR</span><span class="hud-val" id="score-disp">0</span></div>
+            </div>
+        </div>
+        
+        <div id="status-container"></div>
+        <div id="center-alert">ALERT</div>
+
+        <canvas id="gameCanvas" width="360" height="360"></canvas>
+        <div id="wall-timer-bar"></div>
+
+        <div id="upgrade-screen">
+            <h2>SİSTEM YÜKSELTMESİ</h2>
+            <div class="cards-container" id="cards-container"></div>
+        </div>
+
+        <div id="game-over-screen">
+            <h1>SİSTEM ÇÖKTÜ</h1>
+            <div id="new-record-badge">YENİ REKOR!</div>
+            <p style="font-size: 1.2rem; color: #fff;">SKOR: <span id="final-score">0</span></p>
+            <p style="color: #888;">Süre: <span id="final-time">0</span> sn</p>
+            <button class="menu-btn" onclick="resetGame()">TEKRAR DENE</button>
+            <button class="menu-btn secondary" onclick="returnToMenu()">ANA MENÜ</button>
+        </div>
+    </div>
+
+    <!-- Mobile Controls (Absolute Positioned) -->
+    <div id="mobile-controls-layer">
+        <div id="close-edit-btn" onclick="toggleMobileEdit(false)">X</div>
+        <div class="control-btn" id="m-btn-up" data-action="up">▲</div>
+        <div class="control-btn" id="m-btn-left" data-action="left">◀</div>
+        <div class="control-btn" id="m-btn-right" data-action="right">▶</div>
+        <div class="control-btn" id="m-btn-down" data-action="down">▼</div>
+    </div>
+
+<script>
+    // --- DOM ELEMENTS (Moved to top to prevent ReferenceError) ---
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const wrapper = document.getElementById('game-wrapper');
+    const gridSize = 18; const tileCount = 20; 
+
+    const scoreEl = document.getElementById('score-disp');
+    const multEl = document.getElementById('mult-disp');
+    const xpEl = document.getElementById('xp-disp');
+    const levelEl = document.getElementById('level-disp');
+    const upgradeScreen = document.getElementById('upgrade-screen');
+    const cardsContainer = document.getElementById('cards-container');
+    const gameOverScreen = document.getElementById('game-over-screen');
+    const finalScoreEl = document.getElementById('final-score');
+    const finalTimeEl = document.getElementById('final-time');
+    const wallTimerBar = document.getElementById('wall-timer-bar');
+    const centerAlert = document.getElementById('center-alert');
+    const statusContainer = document.getElementById('status-container');
+    const multBox = document.getElementById('multiplier-box');
+    const mainMenu = document.getElementById('main-menu');
+    const menuHighScoreEl = document.getElementById('menu-high-score');
+    const newRecordBadge = document.getElementById('new-record-badge');
+    const unlockScreen = document.getElementById('achievement-unlock-screen');
+    const unlockTitle = document.getElementById('unlock-title');
+    const unlockDesc = document.getElementById('unlock-desc');
+
+    // --- ACHIEVEMENTS SYSTEM ---
+    const ACHIEVEMENTS = [
+        {id: 'login', title: 'Sisteme Giriş', desc: 'İlk kez oyunu oyna.', icon: '🔌'},
+        {id: 'noob', title: 'Çaylak Hacker', desc: '500 Skora ulaş.', icon: '💾'},
+        {id: 'miner', title: 'Veri Madencisi', desc: 'Toplamda 50 Coin topla.', icon: '💰'},
+        {id: 'upgrade', title: 'İlk Güncelleme', desc: 'İlk kez bir kart seç (Level 2).', icon: '🆙'},
+        {id: 'sysadmin', title: 'Sistem Yöneticisi', desc: 'Level 10\'a ulaş.', icon: '👨‍💻'},
+        {id: 'closecall', title: 'Kıl Payı', desc: 'Lazer saldırısından hasar almadan kurtul.', icon: '⚡'},
+        {id: 'wallbreaker', title: 'Duvar Delen', desc: 'Duvar Laneti bitene kadar hayatta kal.', icon: '🧱'},
+        {id: 'ghostrider', title: 'Hayalet Sürücü', desc: 'Hayalet Kuyruk ile kendi içinden 10 kez geç.', icon: '👻'},
+        {id: 'reflex', title: 'Refleks Ustası', desc: 'Ters kontrollerle 5 yem ye.', icon: '🎮'},
+        {id: 'timelord', title: 'Zaman Lordu', desc: 'Zaman Bükücü aktifken lazerden kurtul.', icon: '⏳'},
+        {id: 'legend', title: 'Efsanevi Şans', desc: 'Legendary (Sarı) kart seç.', icon: '🌟'},
+        {id: 'risky', title: 'Risk Sever', desc: 'Risk (Kırmızı) kart seç.', icon: '💀'},
+        {id: 'fullgear', title: 'Tam Donanım', desc: 'Aynı anda Çifte İşlemci ve Yedek Sunucuya sahip ol.', icon: '🤖'},
+        {id: 'goldboy', title: 'Altın Çocuk', desc: 'Altın Dokunuş ile 20 yem ye.', icon: '✨'},
+        {id: 'thief', title: 'Veri Hırsızı', desc: 'Kaçak Veri aktifken 10 kaçan yem yakala.', icon: '🏃'},
+        {id: 'glitch', title: 'Glitch', desc: 'Tek oyunda 5.000 Skora ulaş.', icon: '👾'},
+        {id: 'overclocked', title: 'Overclocked', desc: 'Hızlanmışken hiç çarpmadan süreyi bitir.', icon: '🚀'},
+        {id: 'passive', title: 'Pasif Gelir', desc: 'Kripto Madencisi ile hareket etmeden 3 Coin kazan.', icon: '💤'},
+        {id: 'bigdata', title: 'Büyük Veri', desc: 'Yılan boyunu 50 yap.', icon: '🐍'},
+        {id: 'zeroerror', title: 'Sıfır Hata', desc: 'Level 5\'e kadar hiç Unique kart alma.', icon: '🚫'},
+        {id: 'tailpain', title: 'Kuyruk Acısı', desc: 'Kendi kuyruğuna çarparak öl.', icon: '🤕'},
+        {id: 'lasercut', title: 'Lazer Kesimi', desc: 'Lazer kuyruğunu kessin ama ölme.', icon: '🔪'},
+        {id: 'greedy', title: 'Açgözlü', desc: 'Lazer uyarısı varken lazerdeki yemi al.', icon: '🤑'},
+        {id: 'crash', title: 'Sistem Çökmesi', desc: 'Duvar, Ters Kontrol ve Ölü Piksel aynı anda aktif olsun.', icon: '💥'},
+        {id: 'suicide', title: 'İntihar Görevi', desc: 'Fedakar kartını alarak oyunu bitir (Boyun kısayken).', icon: '🥀'},
+        {id: 'millionaire', title: 'Milyoner', desc: 'Toplam 1.000 Coin topla.', icon: '💎'},
+        {id: 'veteran', title: 'Emektar', desc: 'Oyunda toplam 1 saat geçir.', icon: '🕰️'},
+        {id: 'cardexpert', title: 'Kart Uzmanı', desc: 'Tüm kartları en az bir kez seç.', icon: '🃏'},
+        {id: 'ouroboros', title: 'Ouroboros', desc: 'Toplam 10.000 yem ye.', icon: '♾️'},
+        {id: 'godmode', title: 'God Mode', desc: '20.000 Skora ulaş.', icon: '👑'}
+    ];
+
+    let playerAchievements = JSON.parse(localStorage.getItem('neonSnakeAchievements')) || {};
+    let playerStats = JSON.parse(localStorage.getItem('neonSnakeStats')) || {
+        totalCoins: 0, totalTime: 0, totalFood: 0, cardsPicked: []
+    };
+
+    function unlockAchievement(id) {
+        if(!playerAchievements[id]) {
+            playerAchievements[id] = true;
+            localStorage.setItem('neonSnakeAchievements', JSON.stringify(playerAchievements));
+            
+            // Add to session list for end-game display
+            if(state.sessionStats && state.sessionStats.unlockedThisSession) {
+                if(!state.sessionStats.unlockedThisSession.includes(id)) {
+                    state.sessionStats.unlockedThisSession.push(id);
+                }
+            }
+            return true; 
+        }
+        return false;
+    }
+
+    function openAchievements() {
+        const list = document.getElementById('ach-list');
+        list.innerHTML = '';
+        
+        ACHIEVEMENTS.forEach(ach => {
+            const unlocked = playerAchievements[ach.id];
+            const el = document.createElement('div');
+            el.className = `ach-item ${unlocked ? 'unlocked' : ''}`;
+            el.innerHTML = `
+                <div class="ach-icon">${unlocked ? ach.icon : '🔒'}</div>
+                <div class="ach-content">
+                    <div class="ach-title">${ach.title}</div>
+                    <div class="ach-desc">${ach.desc}</div>
+                </div>
+            `;
+            list.appendChild(el);
+        });
+
+        document.getElementById('main-menu').style.display = 'none';
+        document.getElementById('achievements-screen').style.display = 'flex';
+    }
+
+    function closeAchievements() {
+        document.getElementById('achievements-screen').style.display = 'none';
+        document.getElementById('main-menu').style.display = 'flex';
+    }
+
+    async function checkEndGameAchievements() {
+        // Update global stats
+        playerStats.totalCoins += state.sessionStats.coinsCollected;
+        playerStats.totalTime += state.totalTimePlayed;
+        playerStats.totalFood += state.sessionStats.foodEaten;
+        localStorage.setItem('neonSnakeStats', JSON.stringify(playerStats));
+
+        // Check for end-game conditions and unlock
+        if(state.score >= 500) unlockAchievement('noob');
+        if(state.score >= 5000) unlockAchievement('glitch');
+        if(state.score >= 20000) unlockAchievement('godmode');
+        
+        if(playerStats.totalCoins >= 50) unlockAchievement('miner');
+        if(playerStats.totalCoins >= 1000) unlockAchievement('millionaire');
+        
+        if(playerStats.totalTime >= 3600000) unlockAchievement('veteran');
+        if(playerStats.totalFood >= 10000) unlockAchievement('ouroboros');
+
+        if(snake.body.length >= 50) unlockAchievement('bigdata');
+        if(state.level >= 5 && state.sessionStats.uniqueCards === 0) unlockAchievement('zeroerror');
+
+        if(state.sessionStats.ghostPasses >= 10) unlockAchievement('ghostrider');
+        if(state.sessionStats.reflexFood >= 5) unlockAchievement('reflex');
+        if(state.sessionStats.goldenFood >= 20) unlockAchievement('goldboy');
+        if(state.sessionStats.runawayCaught >= 10) unlockAchievement('thief');
+        if(state.sessionStats.passiveCoins >= 3) unlockAchievement('passive');
+
+        if(snake.modifiers.dualCore && snake.modifiers.hasBackup) unlockAchievement('fullgear');
+        if(snake.modifiers.wallActive && snake.modifiers.reverseControls && snake.modifiers.deadPixelsTimer > 0) unlockAchievement('crash');
+
+        // Display unlocked achievements
+        if(state.sessionStats.unlockedThisSession.length > 0) {
+            for (const achId of state.sessionStats.unlockedThisSession) {
+                await showUnlockScreen(achId);
+            }
+        }
+    }
+
+    function showUnlockScreen(achId) {
+        return new Promise(resolve => {
+            const ach = ACHIEVEMENTS.find(a => a.id === achId);
+            unlockTitle.innerText = ach.title;
+            unlockDesc.innerText = ach.desc;
+            unlockScreen.style.display = 'flex';
+            
+            setTimeout(() => {
+                unlockScreen.style.display = 'none';
+                resolve();
+            }, 3000);
+        });
+    }
+
+    // --- SETTINGS & STORAGE SYSTEM ---
+    const defaultSettings = {
+        keys: { up: 'ArrowUp', down: 'ArrowDown', left: 'ArrowLeft', right: 'ArrowRight' },
+        mobilePos: {
+            up: { left: '50%', top: '70%' },
+            left: { left: '35%', top: '80%' },
+            right: { left: '65%', top: '80%' },
+            down: { left: '50%', top: '90%' }
+        },
+        audio: { music: 0.4, sfx: 0.6 }
+    };
+    let gameSettings = JSON.parse(localStorage.getItem('neonSnakeSettings')) || JSON.parse(JSON.stringify(defaultSettings));
+    if(!gameSettings.audio) gameSettings.audio = { music: 0.4, sfx: 0.6 }; 
+
+    let isMobileEditMode = false;
+    let keyRemapTarget = null;
+
+    function loadSettingsUI() {
+        document.getElementById('btn-bind-up').innerText = formatKeyName(gameSettings.keys.up);
+        document.getElementById('btn-bind-down').innerText = formatKeyName(gameSettings.keys.down);
+        document.getElementById('btn-bind-left').innerText = formatKeyName(gameSettings.keys.left);
+        document.getElementById('btn-bind-right').innerText = formatKeyName(gameSettings.keys.right);
+        
+        document.getElementById('music-volume').value = gameSettings.audio.music;
+        document.getElementById('sfx-volume').value = gameSettings.audio.sfx;
+
+        applyMobilePositions();
+    }
+
+    function updateAudioSettings() {
+        gameSettings.audio.music = parseFloat(document.getElementById('music-volume').value);
+        gameSettings.audio.sfx = parseFloat(document.getElementById('sfx-volume').value);
+        
+        if(audio.bg1) audio.bg1.volume = gameSettings.audio.music;
+        if(audio.bg2) audio.bg2.volume = gameSettings.audio.music;
+    }
+
+    function applyMobilePositions() {
+        const btns = {
+            up: document.getElementById('m-btn-up'),
+            down: document.getElementById('m-btn-down'),
+            left: document.getElementById('m-btn-left'),
+            right: document.getElementById('m-btn-right')
+        };
+        for(let dir in btns) {
+            btns[dir].style.left = gameSettings.mobilePos[dir].left;
+            btns[dir].style.top = gameSettings.mobilePos[dir].top;
+            btns[dir].style.transform = 'translate(-50%, -50%)'; 
+        }
+    }
+
+    function formatKeyName(key) {
+        if(key.startsWith('Arrow')) return key.replace('Arrow', '').toUpperCase();
+        if(key === ' ') return 'SPACE';
+        return key.toUpperCase();
+    }
+
+    function remapKey(action) {
+        if(keyRemapTarget) return;
+        keyRemapTarget = action;
+        const btn = document.getElementById(`btn-bind-${action}`);
+        btn.innerText = '...';
+        btn.classList.add('listening');
+        
+        const handler = (e) => {
+            e.preventDefault();
+            gameSettings.keys[action] = e.key;
+            btn.classList.remove('listening');
+            loadSettingsUI();
+            keyRemapTarget = null;
+            document.removeEventListener('keydown', handler);
+        };
+        document.addEventListener('keydown', handler);
+    }
+
+    function resetToDefaults() {
+        if(confirm('Tüm ayarları sıfırlamak istediğine emin misin?')) {
+            localStorage.removeItem('neonSnakeSettings');
+            gameSettings = JSON.parse(JSON.stringify(defaultSettings));
+            loadSettingsUI();
+            updateAudioSettings();
+            addStatus('AYARLAR SIFIRLANDI', 'info');
+        }
+    }
+
+    function toggleMobileEdit(active) {
+        isMobileEditMode = active;
+        const layer = document.getElementById('mobile-controls-layer');
+        const btns = document.querySelectorAll('.control-btn');
+        
+        checkMobileControlsVisibility();
+
+        if (active) {
+            layer.classList.add('editing');
+            btns.forEach(b => b.classList.add('editing'));
+            document.getElementById('settings-screen').style.opacity = '0.1'; 
+        } else {
+            layer.classList.remove('editing');
+            btns.forEach(b => b.classList.remove('editing'));
+            document.getElementById('settings-screen').style.opacity = '1';
+        }
+    }
+
+    function checkMobileControlsVisibility() {
+        const layer = document.getElementById('mobile-controls-layer');
+        const isPlaying = state.mode === 'PLAYING' || state.mode === 'PAUSED'; 
+        const isMobile = window.innerWidth < 1024 || 'ontouchstart' in window;
+
+        if (isMobileEditMode) {
+            layer.style.display = 'block';
+        } else if (isMobile && isPlaying) {
+            layer.style.display = 'block';
+        } else {
+            layer.style.display = 'none';
+        }
+    }
+
+    function initMobileDrag() {
+        const btns = document.querySelectorAll('.control-btn');
+        btns.forEach(btn => {
+            let isDragging = false;
+            
+            const startDrag = (e) => {
+                if(!isMobileEditMode) return;
+                isDragging = true;
+                e.preventDefault();
+            };
+            
+            const doDrag = (e) => {
+                if(!isDragging || !isMobileEditMode) return;
+                e.preventDefault();
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                
+                const xPct = (clientX / window.innerWidth) * 100;
+                const yPct = (clientY / window.innerHeight) * 100;
+                
+                btn.style.left = xPct + '%';
+                btn.style.top = yPct + '%';
+                
+                const action = btn.dataset.action;
+                gameSettings.mobilePos[action] = { left: xPct + '%', top: yPct + '%' };
+            };
+            
+            const endDrag = () => { isDragging = false; };
+
+            btn.addEventListener('mousedown', startDrag);
+            btn.addEventListener('touchstart', startDrag);
+            window.addEventListener('mousemove', doDrag);
+            window.addEventListener('touchmove', doDrag, {passive: false});
+            window.addEventListener('mouseup', endDrag);
+            window.addEventListener('touchend', endDrag);
+        });
+    }
+
+    function openSettings() {
+        document.getElementById('main-menu').style.display = 'none';
+        document.getElementById('settings-screen').style.display = 'flex';
+        loadSettingsUI();
+    }
+
+    function saveAndCloseSettings() {
+        if(isMobileEditMode) toggleMobileEdit(false);
+        localStorage.setItem('neonSnakeSettings', JSON.stringify(gameSettings));
+        document.getElementById('settings-screen').style.display = 'none';
+        document.getElementById('main-menu').style.display = 'flex';
+        checkMobileControlsVisibility();
+    }
+
+    initMobileDrag();
+    loadSettingsUI();
+
+    // --- GAME LOGIC ---
+
+    const audio = {
+        bg1: new Audio('background1.mp3'),
+        bg2: new Audio('background2.mp3'),
+        bait: new Audio('bait.wav'),
+        coin: new Audio('coin.wav'),
+        laser1: new Audio('laserphase1.wav'),
+        laser2: new Audio('laserphase2.wav'),
+        death: new Audio('death.mp3'),
+        currentBg: 1,
+        active: false
+    };
+
+    function startMusic() {
+        if(!audio.active) { 
+            audio.bg1.onended = function() { audio.bg2.currentTime = 0; audio.bg2.play(); audio.currentBg = 2; };
+            audio.bg2.onended = function() { audio.bg1.currentTime = 0; audio.bg1.play(); audio.currentBg = 1; };
+            audio.active = true;
+        }
+        
+        audio.bg1.volume = gameSettings.audio.music;
+        audio.bg2.volume = gameSettings.audio.music;
+        
+        if(audio.currentBg === 1) {
+            audio.bg1.play().catch(e => console.log("Bg1 play error:", e));
+        } else {
+            audio.bg2.play().catch(e => console.log("Bg2 play error:", e));
+        }
+    }
+
+    function stopMusic() {
+        audio.bg1.pause(); audio.bg1.currentTime = 0;
+        audio.bg2.pause(); audio.bg2.currentTime = 0;
+        audio.currentBg = 1;
+    }
+    
+    function initAudio() {
+        if(audio.active) return;
+        audio.bg1.volume = gameSettings.audio.music; 
+        audio.bg2.volume = gameSettings.audio.music;
+        
+        audio.bg1.onended = function() { audio.bg2.currentTime = 0; audio.bg2.play(); audio.currentBg = 2; };
+        audio.bg2.onended = function() { audio.bg1.currentTime = 0; audio.bg1.play(); audio.currentBg = 1; };
+        audio.bg1.play().then(() => {
+            console.log("Müzik Başladı"); audio.active = true;
+        }).catch(error => { console.log("Otomatik oynatma engellendi."); });
+    }
+    
+    function playSound(name) { 
+        if(audio[name]) { 
+            audio[name].currentTime = 0; 
+            audio[name].volume = gameSettings.audio.sfx; 
+            audio[name].play().catch(() => {}); 
+        } 
+    }
+
+    let highScore = localStorage.getItem('neonSnakeHighScore') || 0;
+    menuHighScoreEl.innerText = highScore;
+
+    let state = { mode: 'MENU', score: 0, rawScore: 0, level: 1, xp: 0, xpToNextLevel: 5, baseSpeed: 100, currentSpeed: 100, lastTime: 0, scoreAccumulator: 0, totalTimePlayed: 0, scoreMultiplier: 0, pendingEvent: null, sessionStats: { foodEaten: 0, coinsCollected: 0, ghostPasses: 0, reflexFood: 0, runawayCaught: 0, goldenFood: 0, passiveCoins: 0, uniqueCards: 0, cardsPicked: [], unlockedThisSession: [] } };
+    let snake = { body: [], dir: {x: 1, y: 0}, nextDir: {x: 1, y: 0}, modifiers: { wallActive: false, wallTimer: 0, wallThickness: 0, ghostTailCount: 0, turnBonus: false, wallHackerUses: 0, hasBackup: false, timeWarpTimer: 0, reverseControls: false, deadPixelsTimer: 0, invulnerable: 0, overclockTimer: 0, magneticCharges: 0, brittleTail: false, doubleXp: false, goldenTouch: false, runawayData: false, dualCore: false, cryptoMiner: false, sugarRush: false, syntheticFlavor: false, forbiddenFruit: false, orchard: false }, recoverLength: 0 };
+    let lasers = { active: false, phase: 'IDLE', timer: 0, lines: [] };
+    let eventTimer = 0; let cryptoTimer = 0; let coins = []; let deadPixelTrail = []; let foods = [{x: 10, y: 10}]; let apples = []; let particles = [];
+
+    const CARD_POOL = [
+        { id: 'score_boost_1', title: 'PUAN ARTTIRICI', desc: 'Puan çarpanına +0.2 eklenir.', type: 'BOOST', rarity: 'common', weight: 20, apply: () => { state.scoreMultiplier += 0.2; } },
+        { id: 'sugar_rush', title: 'ŞEKER YÜKLEMESİ', desc: 'Elma yediğinde de +1 XP kazanırsın.', type: 'TEKNİK', rarity: 'common', weight: 20, unique: true, apply: () => { snake.modifiers.sugarRush = true; addStatus('ŞEKER YÜKLEMESİ', 'info'); } },
+        { id: 'quick_cache', title: 'HIZLI ÖNBELLEK', desc: 'Sonraki Level için gereken XP 2 azalır.', type: 'TEKNİK', rarity: 'common', weight: 20, apply: () => { state.xpToNextLevel -= 2; if(state.xpToNextLevel < 1) state.xpToNextLevel = 1; addStatus('XP GEREKSİNİMİ DÜŞTÜ', 'info'); } },
+        { id: 'snake_move', title: 'YILAN GİBİ', desc: 'Yön değiştirmek +2 PUAN kazandırır.', type: 'TEKNİK', rarity: 'common', weight: 20, apply: () => { snake.modifiers.turnBonus = true; } },
+        { id: 'compress', title: 'SIKIŞTIRMA', desc: 'Yılanın boyu %25 kısalır.', type: 'TEKNİK', rarity: 'uncommon', weight: 15, apply: () => { let cut = Math.floor(snake.body.length * 0.25); snake.body.splice(snake.body.length - cut, cut); addStatus('BOYUT AZALDI', 'info'); } },
+        { id: 'sacrificial', title: 'FEDAKAR', desc: '-2 Kare kısalırsın ama Skorun %30 silinir.', type: 'TAKAS', rarity: 'common', weight: 15, apply: () => { if(snake.body.length > 3) { snake.body.splice(snake.body.length - 2, 2); state.score = Math.floor(state.score * 0.7); state.rawScore = state.score; addStatus('BEDEL ÖDENDİ', 'info'); } else { addStatus('YILAN ÇOK KISA!', 'negative'); } } },
+        { id: 'crypto_miner', title: 'KRİPTO MADENCİSİ', desc: 'Pasif: Her 10 saniyede bir COIN üretir. Her coin +0.01 çarpan verir.', type: 'EKONOMİ', rarity: 'uncommon', weight: 15, unique: true, apply: () => { snake.modifiers.cryptoMiner = true; addStatus('MADENCİLİK BAŞLADI', 'positive'); } },
+        { id: 'score_boost_2', title: 'PUAN ÖZÜTÜ', desc: 'Puan çarpanına +0.4 eklenir.', type: 'BOOST', rarity: 'uncommon', weight: 10, apply: () => { state.scoreMultiplier += 0.4; } },
+        { id: 'magnet', title: 'MANYETİK ALAN', desc: 'Sonraki 5 yem uzaktan çekilir.', type: 'GÜÇ', rarity: 'uncommon', weight: 10, apply: () => { snake.modifiers.magneticCharges += 5; addStatus('MANYETİK ALAN', 'info'); } },
+        { id: 'wall_curse', title: 'DUVARLAR', desc: 'Dört tarafın 15 saniye boyunca duvar olur fakat hayatta kaldıkça x2 puan!', type: 'RİSK', rarity: 'uncommon', weight: 10, apply: () => { 
+            snake.modifiers.wallActive = true; snake.modifiers.wallTimer = 15000; snake.modifiers.wallThickness += 1; 
+            let currentLen = snake.body.length; let center = Math.floor(tileCount / 2);
+            snake.body = [{x: center, y: center}, {x: center, y: center + 1}, {x: center, y: center + 2}, {x: center, y: center + 3}];
+            snake.dir = {x: 0, y: -1}; snake.nextDir = {x: 0, y: -1}; snake.recoverLength = Math.max(0, currentLen - 4);
+            addStatus('DUVAR LANETİ: YENİDEN DOĞUŞ', 'negative'); 
+        } },
+        { id: 'golden_touch', title: 'ALTIN DOKUNUŞ', desc: 'Yemler artık +0.01 Çarpan verir.', type: 'PASİF', rarity: 'rare', weight: 8, unique: true, apply: () => { snake.modifiers.goldenTouch = true; addStatus('ALTIN DOKUNUŞ AKTİF', 'positive'); } },
+        { id: 'synthetic_flavor', title: 'SENTETİK LEZZET', desc: 'Yemler (Yeşil) artık 10 Skor puanı da verir.', type: 'PASİF', rarity: 'rare', weight: 8, unique: true, apply: () => { snake.modifiers.syntheticFlavor = true; addStatus('SENTETİK LEZZET', 'info'); } },
+        { id: 'overclock', title: 'OVERCLOCK', desc: '10sn Boyunca HIZLI. +0.6x Çarpan.', type: 'RİSK', rarity: 'uncommon', weight: 10, apply: () => { snake.modifiers.overclockTimer = 10000; state.baseSpeed *= 0.85; state.currentSpeed = state.baseSpeed; state.scoreMultiplier += 0.6; addStatus('HIZLANDI (10sn)', 'negative'); } },
+        { id: 'runaway_data', title: 'KAÇAK VERİ', desc: 'Yemler kaçar! Ama +3 XP verirler.', type: 'LANET', rarity: 'risk', weight: 8, unique: true, apply: () => { snake.modifiers.runawayData = true; addStatus('VERİ KAÇAĞI!', 'negative'); } },
+        { id: 'brittle', title: 'KOPMAYA HAZIR', desc: 'Kuyruğunun yarısı cansız hale gelir, o kısma hasar alamazsın.', type: 'SURVIVAL', rarity: 'rare', weight: 8, apply: () => { snake.modifiers.brittleTail = true; addStatus('KUYRUK ZAYIFLADI', 'warning'); } },
+        { id: 'score_boost_3', title: 'PUAN KATLİAMI!', desc: 'Puan çarpanına +0.5 eklenir.', type: 'BOOST', rarity: 'rare', weight: 5, apply: () => { state.scoreMultiplier += 0.5; } },
+        { id: 'short_circuit', title: 'KISA DEVRE', desc: '5sn Coin Yağmuru! Coinler +0.01 Çarpan verir.', type: 'EKONOMİ', rarity: 'rare', weight: 5, apply: () => { eventTimer = 5000; addStatus('COIN ETKİNLİĞİ', 'positive'); } },
+        { id: 'wall_hacker', title: 'DUVAR HACKER', desc: 'Pasif: Duvarlara 1 çarpışma hakkı verir.', type: 'GÜÇ', rarity: 'rare', weight: 5, apply: () => { snake.modifiers.wallHackerUses += 1; addStatus('HACKER HAKKI +1', 'info'); } },
+        { id: 'time_warp', title: 'ZAMAN BÜKÜCÜ', desc: '10sn boyunca HER ŞEY yavaşlar.', type: 'GÜÇ', rarity: 'rare', weight: 5, apply: () => { snake.modifiers.timeWarpTimer = 10000; addStatus('ZAMAN BÜKÜLDÜ', 'info'); } },
+        { id: 'dual_core', title: 'ÇİFTE İŞLEMCİ', desc: 'Haritada sürekli 2 yem bulunur.', type: 'SİSTEM', rarity: 'legendary', weight: 4, unique: true, apply: () => { snake.modifiers.dualCore = true; spawnFood(); addStatus('ÇİFTE İŞLEMCİ AKTİF', 'positive'); } },
+        { id: 'orchard', title: 'MEYVE BAHÇESİ', desc: 'Haritada sürekli 2 Elma bulunur.', type: 'SİSTEM', rarity: 'legendary', weight: 4, unique: true, apply: () => { snake.modifiers.orchard = true; spawnApple(); addStatus('MEYVE BAHÇESİ AKTİF', 'positive'); } },
+        { id: 'forbidden_fruit', title: 'YASAK MEYVE', desc: 'Elmalar 250 Skor verir ama seni hızlandırır.', type: 'LANET', rarity: 'legendary', weight: 3, unique: true, apply: () => { snake.modifiers.forbiddenFruit = true; addStatus('YASAK MEYVE', 'negative'); } },
+        { id: 'backup_server', title: 'YEDEK SUNUCU', desc: 'Ölürsen 1 kere yeniden doğarsın.', type: 'SİGORTA', rarity: 'legendary', weight: 2, apply: () => { snake.modifiers.hasBackup = true; addStatus('YEDEK AKTİF', 'positive'); } },
+        { id: 'sage', title: 'BİLGE', desc: 'Yemler artık +2 XP verir.', type: 'PASİF', rarity: 'legendary', weight: 1, unique: true, apply: () => { snake.modifiers.doubleXp = true; addStatus('BİLGELİK KAZANILDI', 'positive'); } },
+        { id: 'ghost_tail', title: 'HAYALET KUYRUK', desc: 'Kuyruğun son kısmına çarpmazsın. (+2 Parça)', type: 'SURVIVAL', rarity: 'legendary', weight: 2, apply: () => { snake.modifiers.ghostTailCount += 2; addStatus(`HAYALET: ${snake.modifiers.ghostTailCount} PARÇA`, 'info'); } },
+        { id: 'score_boost_4', title: 'PUAN HIZLANDIRICI', desc: 'Puan çarpanına +1.0 eklenir.', type: 'BOOST', rarity: 'legendary', weight: 1.5, apply: () => { state.scoreMultiplier += 1.0; } },
+        { id: 'polarity', title: 'TERS KUTUPLAMA', desc: 'Kontroller TERS döner. Çarpan +4.0x!', type: 'LANET', rarity: 'risk', weight: 2, apply: () => { snake.modifiers.reverseControls = true; state.scoreMultiplier += 4.0; addStatus('KONTROL HATASI', 'negative'); } },
+        { id: 'dead_pixels', title: 'ÖLÜ PİKSELLER', desc: '15sn ölümcül iz bırak. Çarpan 2x Artar!', type: 'LANET', rarity: 'risk', weight: 2, apply: () => { snake.modifiers.deadPixelsTimer = 15000; addStatus('İZ BIRAKIYOR (x2 PUAN)', 'negative'); } }
+    ];
+
+    function startGame() {
+        unlockAchievement('login');
+        startMusic();
+        mainMenu.style.display = 'none';
+        gameCanvas.style.filter = 'none';
+        init();
+    }
+
+    function returnToMenu() {
+        gameOverScreen.style.display = 'none';
+        mainMenu.style.display = 'flex';
+        menuHighScoreEl.innerText = highScore;
+        state.mode = 'MENU';
+        checkMobileControlsVisibility();
+    }
+
+    function init() {
+        state = { mode: 'PLAYING', score: 0, rawScore: 0, level: 1, xp: 0, xpToNextLevel: 5, baseSpeed: 100, currentSpeed: 100, lastTime: performance.now(), scoreAccumulator: 0, totalTimePlayed: 0, scoreMultiplier: 0, pendingEvent: null, sessionStats: { foodEaten: 0, coinsCollected: 0, ghostPasses: 0, reflexFood: 0, runawayCaught: 0, goldenFood: 0, passiveCoins: 0, uniqueCards: 0, cardsPicked: [], unlockedThisSession: [] } };
+        snake = { body: [{x: 10, y: 10}, {x: 9, y: 10}, {x: 8, y: 10}], dir: {x: 1, y: 0}, nextDir: {x: 1, y: 0}, inputQueue: [], modifiers: { wallActive: false, wallTimer: 0, wallThickness: 0, ghostTailCount: 0, turnBonus: false, wallHackerUses: 0, hasBackup: false, timeWarpTimer: 0, reverseControls: false, deadPixelsTimer: 0, invulnerable: 0, overclockTimer: 0, magneticCharges: 0, brittleTail: false, doubleXp: false, goldenTouch: false, runawayData: false, dualCore: false, cryptoMiner: false, sugarRush: false, syntheticFlavor: false, forbiddenFruit: false, orchard: false }, recoverLength: 0 };
+        lasers = { active: false, phase: 'IDLE', timer: 0, lines: [] };
+        eventTimer = 0; cryptoTimer = 0; coins = []; deadPixelTrail = []; foods = [{x: 10, y: 10}]; apples = []; particles = []; statusContainer.innerHTML = '';
+        newRecordBadge.style.display = 'none';
+        
+        spawnFood(); spawnApple(); updateUI();
+        gameOverScreen.style.display = 'none'; upgradeScreen.style.display = 'none'; centerAlert.style.display = 'none';
+        checkMobileControlsVisibility();
+        
+        requestAnimationFrame(gameLoop);
+    }
+
+    function gameLoop(timestamp) {
+        if (state.mode === 'PLAYING') {
+            let rawDt = timestamp - state.lastTime;
+            state.lastTime = timestamp;
+
+            let dt = rawDt;
+            if (snake.modifiers.timeWarpTimer > 0) {
+                dt = rawDt * 0.5; snake.modifiers.timeWarpTimer -= rawDt; 
+                if(snake.modifiers.timeWarpTimer <= 0) addStatus('ZAMAN NORMALE DÖNDÜ', 'info');
+            }
+
+            state.totalTimePlayed += dt;
+            if (snake.modifiers.invulnerable > 0) snake.modifiers.invulnerable -= dt;
+
+            if (snake.modifiers.cryptoMiner) {
+                cryptoTimer += dt;
+                if(cryptoTimer >= 10000) {
+                    spawnCoin();
+                    state.sessionStats.passiveCoins++;
+                    addStatus('KAZIM TAMAMLANDI', 'positive');
+                    cryptoTimer = 0;
+                }
+            }
+
+            if (snake.modifiers.overclockTimer > 0) {
+                snake.modifiers.overclockTimer -= dt; 
+                if (snake.modifiers.overclockTimer <= 0) {
+                    state.baseSpeed /= 0.85; state.currentSpeed = state.baseSpeed; 
+                    state.scoreMultiplier -= 0.6;
+                    addStatus('OVERCLOCK BİTTİ', 'info');
+                    unlockAchievement('overclocked');
+                }
+            }
+
+            state.scoreAccumulator += dt;
+            if (state.scoreAccumulator > state.currentSpeed) { update(); state.scoreAccumulator = 0; }
+
+            if (snake.modifiers.wallActive) {
+                snake.modifiers.wallTimer -= dt; updateWallTimerUI();
+                if (snake.modifiers.wallTimer <= 0) { 
+                    snake.modifiers.wallActive = false; snake.modifiers.wallThickness = 0; 
+                    unlockAchievement('wallbreaker');
+                }
+            }
+
+            if (eventTimer > 0) { eventTimer -= dt; if(Math.random() < 0.1) spawnCoin(); if (eventTimer <= 0) coins = []; }
+
+            if (snake.modifiers.deadPixelsTimer > 0) {
+                snake.modifiers.deadPixelsTimer -= dt;
+                if(snake.modifiers.deadPixelsTimer <= 0) { deadPixelTrail = []; addStatus('İZLER KAYBOLDU', 'info'); }
+            }
+            
+            updateParticles();
+
+            if(deadPixelTrail.length > 0) {
+                for(let i = deadPixelTrail.length - 1; i >= 0; i--) {
+                    deadPixelTrail[i].timer -= dt; 
+                    if(deadPixelTrail[i].timer <= 0) deadPixelTrail.splice(i, 1); 
+                }
+            }
+
+            if (lasers.active) updateLasers(dt);
+
+            draw(); updateUI(); 
+        } else { state.lastTime = timestamp; }
+        if (state.mode !== 'GAMEOVER' && state.mode !== 'ACHIEVEMENT') requestAnimationFrame(gameLoop);
+    }
+
+    function updateParticles() {
+        for (let i = particles.length - 1; i >= 0; i--) {
+            let p = particles[i]; p.x += p.vx; p.y += p.vy; p.life -= 0.1;
+            if (p.life <= 0) particles.splice(i, 1);
+        }
+    }
+    function updateWallTimerUI() {
+        const pct = (snake.modifiers.wallTimer / 15000) * 100;
+        wallTimerBar.style.width = pct + '%';
+        wallTimerBar.style.background = snake.modifiers.wallThickness > 1 ? '#ff0000' : '#ff0055';
+    }
+
+    function update() {
+        if (snake.inputQueue.length > 0) {
+            let nextMove = snake.inputQueue.shift();
+            if(snake.modifiers.turnBonus && (nextMove.x !== snake.dir.x || nextMove.y !== snake.dir.y)) { state.score += 2; }
+            snake.dir = nextMove;
+        }
+        
+        let head = { x: snake.body[0].x + snake.dir.x, y: snake.body[0].y + snake.dir.y };
+        let collision = false;
+
+        if(snake.modifiers.deadPixelsTimer > 0) {
+            deadPixelTrail.push({x: snake.body[0].x, y: snake.body[0].y});
+            if(deadPixelTrail.length > 4) deadPixelTrail.shift();
+        }
+
+        const t = snake.modifiers.wallActive ? snake.modifiers.wallThickness : 0;
+        if (head.x < t || head.x >= tileCount - t || head.y < t || head.y >= tileCount - t) {
+            if (snake.modifiers.wallActive) {
+                if(snake.modifiers.wallHackerUses > 0) {
+                    snake.modifiers.wallHackerUses--; addStatus('DUVAR HACKLENDİ!', 'positive'); triggerShake();
+                    if(head.x < t) head.x = tileCount - t - 1; else if(head.x >= tileCount - t) head.x = t;
+                    if(head.y < t) head.y = tileCount - t - 1; else if(head.y >= tileCount - t) head.y = t;
+                } else collision = true;
+            } else {
+                if (head.x < 0) head.x = tileCount - 1; if (head.x >= tileCount) head.x = 0;
+                if (head.y < 0) head.y = tileCount - 1; if (head.y >= tileCount) head.y = 0;
+            }
+        }
+
+        let effectiveLen = Math.max(0, snake.body.length - snake.modifiers.ghostTailCount);
+        for (let i = 0; i < effectiveLen; i++) { 
+            if (head.x === snake.body[i].x && head.y === snake.body[i].y) {
+                if (snake.modifiers.brittleTail && i > snake.body.length / 2) {
+                    snake.body.length = i; snake.modifiers.brittleTail = false; addStatus('KUYRUK KOPTU!', 'warning'); collision = false; break;
+                } else {
+                    collision = true;
+                    if(i === snake.body.length - 1) unlockAchievement('tailpain');
+                }
+            }
+        }
+        
+        // Ghost Tail Achievement Check
+        if(snake.modifiers.ghostTailCount > 0) {
+            let fullLen = snake.body.length;
+            for(let i = effectiveLen; i < fullLen; i++) {
+                if(head.x === snake.body[i].x && head.y === snake.body[i].y) {
+                    state.sessionStats.ghostPasses++;
+                }
+            }
+        }
+
+        for(let p of deadPixelTrail) { if(head.x === p.x && head.y === p.y) collision = true; }
+
+        if (collision && snake.modifiers.invulnerable <= 0) { triggerShake(); tryGameOver(); return; }
+
+        snake.body.unshift(head);
+
+        let grewThisFrame = false;
+        if (snake.recoverLength > 0) {
+            snake.recoverLength--;
+            grewThisFrame = true; 
+        }
+
+        let magnetActive = snake.modifiers.magneticCharges > 0;
+        let eatenFoodIdx = -1;
+
+        foods.forEach((f, idx) => {
+            let dist = Math.abs(head.x - f.x) + Math.abs(head.y - f.y);
+            
+            if(snake.modifiers.runawayData && dist <= 3 && dist > 0) {
+                 let dx = f.x - head.x; let dy = f.y - head.y;
+                 let moveX = dx > 0 ? 1 : -1; let moveY = dy > 0 ? 1 : -1;
+                 let newFx = f.x + moveX; let newFy = f.y + moveY;
+                 if(newFx >= 0 && newFx < tileCount && newFy >= 0 && newFy < tileCount) {
+                     let occupied = snake.body.some(p => p.x === newFx && p.y === newFy);
+                     if(!occupied) { foods[idx] = {x: newFx, y: newFy}; }
+                 }
+            }
+
+            if (head.x === f.x && head.y === f.y) eatenFoodIdx = idx;
+            else if (magnetActive && dist <= 4 && eatenFoodIdx === -1) {
+                eatenFoodIdx = idx;
+                ctx.strokeStyle = '#00ff88'; ctx.beginPath(); ctx.moveTo(head.x*gridSize+9, head.y*gridSize+9); ctx.lineTo(f.x*gridSize+9, f.y*gridSize+9); ctx.stroke();
+            }
+        });
+        
+        if (eatenFoodIdx !== -1) {
+            if (magnetActive) {
+                snake.modifiers.magneticCharges--; 
+                if(snake.modifiers.magneticCharges <= 0) addStatus('MANYETİK BİTTİ', 'info');
+            }
+
+            let f = foods[eatenFoodIdx];
+            eatFood(f.x, f.y);
+            foods.splice(eatenFoodIdx, 1);
+            spawnFood(); 
+            if(snake.modifiers.dualCore && foods.length < 2) spawnFood();
+            if(foods.length === 0) spawnFood();
+        } else {
+            if(!grewThisFrame) snake.body.pop(); 
+        }
+
+        // Apple Handling
+        let eatenAppleIdx = -1;
+        apples.forEach((a, idx) => {
+            if (head.x === a.x && head.y === a.y) eatenAppleIdx = idx;
+        });
+
+        if (eatenAppleIdx !== -1) {
+            let a = apples[eatenAppleIdx];
+            eatApple(a.x, a.y);
+            apples.splice(eatenAppleIdx, 1);
+            spawnApple();
+            if(snake.modifiers.orchard && apples.length < 2) spawnApple();
+        }
+
+        let coinIdx = coins.findIndex(c => c.x === head.x && c.y === head.y);
+        if(coinIdx !== -1) {
+            coins.splice(coinIdx, 1); state.scoreMultiplier += 0.01; playSound('coin'); createParticles(head.x, head.y, '#f5ff00');
+            state.sessionStats.coinsCollected++;
+            if(lasers.active && lasers.phase === 'CHARGE') {
+                let onLaser = false;
+                lasers.lines.forEach(l => {
+                    if(l.type === 'row' && head.y === l.index) onLaser = true;
+                    if(l.type === 'col' && head.x === l.index) onLaser = true;
+                });
+                if(onLaser) unlockAchievement('greedy');
+            }
+        }
+        updateUI();
+    }
+
+    function spawnCoin() { let c = { x: Math.floor(Math.random()*tileCount), y: Math.floor(Math.random()*tileCount) }; coins.push(c); }
+    
+    function eatFood(fx, fy) { 
+        createParticles(fx, fy, '#00ff88'); 
+        playSound('bait'); 
+        
+        state.sessionStats.foodEaten++;
+        if(snake.modifiers.reverseControls) state.sessionStats.reflexFood++;
+        if(snake.modifiers.goldenTouch) { state.scoreMultiplier += 0.01; state.sessionStats.goldenFood++; }
+        if(snake.modifiers.runawayData) state.sessionStats.runawayCaught++;
+        
+        let xpGain = 1;
+        if(snake.modifiers.doubleXp) xpGain += 2;
+        if(snake.modifiers.runawayData) xpGain += 3;
+        state.xp += xpGain; 
+        
+        if(snake.modifiers.syntheticFlavor) state.score += 10;
+
+        if (state.xp >= state.xpToNextLevel) levelUp(); 
+    }
+
+    function eatApple(ax, ay) {
+        createParticles(ax, ay, '#ff0055'); 
+        playSound('bait'); 
+
+        let baseMult = 1 + state.scoreMultiplier;
+        let wallBonus = snake.modifiers.wallActive ? Math.pow(2, snake.modifiers.wallThickness) : 1;
+        let pixelBonus = snake.modifiers.deadPixelsTimer > 0 ? 2 : 1;
+        
+        let baseScore = snake.modifiers.forbiddenFruit ? 250 : 50;
+        state.score += Math.floor(baseScore * baseMult * wallBonus * pixelBonus);
+        
+        if(snake.modifiers.forbiddenFruit) {
+            state.baseSpeed *= 0.98; 
+            if(snake.modifiers.overclockTimer <= 0) state.currentSpeed = state.baseSpeed;
+        }
+        
+        if(snake.modifiers.sugarRush) {
+            state.xp += 1;
+            if (state.xp >= state.xpToNextLevel) levelUp();
+        }
+    }
+
+    function spawnFood() {
+        let targetFoodCount = snake.modifiers.dualCore ? 2 : 1;
+        while(foods.length < targetFoodCount) {
+            let valid = false; const t = snake.modifiers.wallActive ? snake.modifiers.wallThickness : 0;
+            let newF = {x:0, y:0};
+            while(!valid) {
+                newF = { x: Math.floor(Math.random()*tileCount), y: Math.floor(Math.random()*tileCount) };
+                if (newF.x < t || newF.x >= tileCount - t || newF.y < t || newF.y >= tileCount - t) continue;
+                let onSnake = false; for(let part of snake.body) { if(part.x===newF.x && part.y===newF.y) onSnake=true; }
+                let onFood = foods.some(f => f.x === newF.x && f.y === newF.y);
+                let onApple = apples.some(a => a.x === newF.x && a.y === newF.y);
+                if(!onSnake && !onFood && !onApple) valid = true;
+            }
+            foods.push(newF);
+        }
+    }
+
+    function spawnApple() {
+        let targetAppleCount = snake.modifiers.orchard ? 2 : 1;
+        while(apples.length < targetAppleCount) {
+            let valid = false; const t = snake.modifiers.wallActive ? snake.modifiers.wallThickness : 0;
+            let newA = {x:0, y:0};
+            while(!valid) {
+                newA = { x: Math.floor(Math.random()*tileCount), y: Math.floor(Math.random()*tileCount) };
+                if (newA.x < t || newA.x >= tileCount - t || newA.y < t || newA.y >= tileCount - t) continue;
+                let onSnake = false; for(let part of snake.body) { if(part.x===newA.x && part.y===newA.y) onSnake=true; }
+                let onFood = foods.some(f => f.x === newA.x && f.y === newA.y);
+                let onApple = apples.some(a => a.x === newA.x && a.y === newA.y);
+                if(!onSnake && !onFood && !onApple) valid = true;
+            }
+            apples.push(newA);
+        }
+    }
+
+    function initLasers() {
+        lasers.active = true; lasers.phase = 'CHARGE'; lasers.timer = 2000; lasers.lines = [];
+        centerAlert.innerText = "LAZER UYARISI"; centerAlert.style.display = 'block'; playSound('laser1');
+        
+        let attackCount = Math.floor(state.level / 3);
+        let lineCount = 1;
+        if(attackCount >= 4) lineCount = 2;
+        if(attackCount >= 7) lineCount = 3;
+
+        for(let i=0; i<lineCount; i++) {
+            let isRow = Math.random() > 0.5; let idx = Math.floor(Math.random() * tileCount);
+            lasers.lines.push({ type: isRow ? 'row' : 'col', index: idx });
+        }
+    }
+    function updateLasers(dt) {
+        lasers.timer -= dt;
+        if (lasers.phase === 'CHARGE' && lasers.timer <= 0) { lasers.phase = 'FIRE'; lasers.timer = 1000; centerAlert.style.display = 'none'; triggerShake(); playSound('laser2'); }
+        else if (lasers.phase === 'FIRE') { checkLaserCollision(); if (lasers.timer <= 0) { lasers.phase = 'IDLE'; lasers.active = false; lasers.lines = []; } }
+    }
+    function checkLaserCollision() {
+        if(snake.modifiers.invulnerable > 0) return;
+        for(let i=0; i<snake.body.length; i++) {
+            let part = snake.body[i];
+            for(let line of lasers.lines) {
+                if ((line.type === 'row' && part.y === line.index) || (line.type === 'col' && part.x === line.index)) {
+                     if(snake.modifiers.timeWarpTimer > 0) unlockAchievement('timelord');
+                     if (i === 0) {
+                         if(snake.modifiers.invulnerable > 0) unlockAchievement('closecall');
+                         tryGameOver(); return;
+                     } else {
+                         snake.body.length = i; 
+                         addStatus('LAZER KESTİ!', 'warning'); 
+                         createParticles(part.x, part.y, '#ff0055');
+                         if(i > snake.body.length/2) unlockAchievement('lasercut');
+                         return;
+                     }
+                }
+            }
+        }
+    }
+
+    function handleInput(key, e) {
+        if(isMobileEditMode) return; 
+        
+        let action = null;
+        if (key === gameSettings.keys.up) action = 'UP';
+        else if (key === gameSettings.keys.down) action = 'DOWN';
+        else if (key === gameSettings.keys.left) action = 'LEFT';
+        else if (key === gameSettings.keys.right) action = 'RIGHT';
+        else if (key === 'ArrowUp') action = 'UP'; 
+        else if (key === 'ArrowDown') action = 'DOWN';
+        else if (key === 'ArrowLeft') action = 'LEFT';
+        else if (key === 'ArrowRight') action = 'RIGHT';
+
+        if(!action) return;
+        if(e && e.type === 'keydown') e.preventDefault();
+
+        if(snake.modifiers.reverseControls) {
+            if(action === 'UP') action = 'DOWN'; else if(action === 'DOWN') action = 'UP';
+            else if(action === 'LEFT') action = 'RIGHT'; else if(action === 'RIGHT') action = 'LEFT';
+        }
+
+        let proposedDir = null;
+        if (action === 'UP') proposedDir = {x: 0, y: -1};
+        if (action === 'DOWN') proposedDir = {x: 0, y: 1};
+        if (action === 'LEFT') proposedDir = {x: -1, y: 0};
+        if (action === 'RIGHT') proposedDir = {x: 1, y: 0};
+
+        if (!proposedDir) return;
+
+        // Buffer Logic: Kuyruk boşsa mevcut yöne, doluysa son planlanan yöne bak
+        const lastPlannedDir = snake.inputQueue.length > 0 ? snake.inputQueue[snake.inputQueue.length - 1] : snake.dir;
+
+        // 180 derece dönüşü engelle (Geri gidemez)
+        if (proposedDir.x === -lastPlannedDir.x && proposedDir.y === -lastPlannedDir.y) return;
+        
+        // Aynı yöne tekrar basılmasını engelle (Gereksiz kuyruk dolmasını önler)
+        if (proposedDir.x === lastPlannedDir.x && proposedDir.y === lastPlannedDir.y) return;
+
+        // Kuyruğa ekle (Max 3 hamle buffer, aşırı yığılmayı önlemek için)
+        if (snake.inputQueue.length < 3) {
+            snake.inputQueue.push(proposedDir);
+        }
+    }
+    
+    document.addEventListener('keydown', e => handleInput(e.key, e));
+
+    ['up', 'down', 'left', 'right'].forEach(dir => {
+        const btn = document.getElementById(`m-btn-${dir}`);
+        const trigger = (e) => {
+            if(isMobileEditMode) return;
+            let logicalKey = gameSettings.keys[dir];
+            handleInput(logicalKey, e);
+        };
+        btn.addEventListener('mousedown', trigger);
+        btn.addEventListener('touchstart', trigger);
+    });
+
+
+    function levelUp() {
+        let nextLvl = state.level + 1;
+        if (nextLvl % 3 === 0) state.pendingEvent = 'LASERS';
+        
+        state.mode = 'PAUSED'; state.level++; state.xp = 0; 
+        state.xpToNextLevel = Math.max(1, state.xpToNextLevel + 2);
+        if(snake.modifiers.quickCache) state.xpToNextLevel = Math.max(1, state.xpToNextLevel - 2);
+
+        if(state.level === 2) unlockAchievement('upgrade');
+        if(state.level === 10) unlockAchievement('sysadmin');
+
+        const hand = []; 
+        let usedCardIds = new Set();
+        for(let i=0; i<3; i++) {
+            let card = getWeightedCard(usedCardIds);
+            if(card) { hand.push(card); usedCardIds.add(card.id); }
+        }
+        renderCards(hand);
+    }
+
+    function getWeightedCard(excludeIds) {
+        const rarityChances = { 'legendary': 0.10, 'rare': 0.15, 'uncommon': 0.25, 'common': 0.50 };
+        let r = Math.random();
+        let targetRarity;
+        if (r < rarityChances.legendary) targetRarity = 'legendary';
+        else if (r < rarityChances.legendary + rarityChances.rare) targetRarity = 'rare';
+        else if (r < rarityChances.legendary + rarityChances.rare + rarityChances.uncommon) targetRarity = 'uncommon';
+        else targetRarity = 'common';
+
+        let raritiesToTry = [targetRarity, 'legendary', 'rare', 'uncommon', 'common'];
+        // Deduplicate rarities list
+        raritiesToTry = [...new Set(raritiesToTry)];
+
+        for (let i = 0; i < raritiesToTry.length; i++) {
+            let currentRarity = raritiesToTry[i];
+            let availableCards = CARD_POOL.filter(c => {
+                if (c.rarity !== currentRarity) return false;
+                if (excludeIds && excludeIds.has(c.id)) return false;
+                if (c.unique) {
+                    if (snake.modifiers[c.id] === true) return false;
+                    if (typeof snake.modifiers[c.id] === 'number' && snake.modifiers[c.id] > 0) return false;
+                    
+                    // ID ve Modifier ismi uyuşmazlıkları için manuel kontroller
+                    if (c.id === 'sugar_rush' && snake.modifiers.sugarRush) return false;
+                    if (c.id === 'dual_core' && snake.modifiers.dualCore) return false;
+                    if (c.id === 'crypto_miner' && snake.modifiers.cryptoMiner) return false;
+                    if (c.id === 'golden_touch' && snake.modifiers.goldenTouch) return false;
+                    if (c.id === 'runaway_data' && snake.modifiers.runawayData) return false;
+                    if (c.id === 'synthetic_flavor' && snake.modifiers.syntheticFlavor) return false;
+                    if (c.id === 'forbidden_fruit' && snake.modifiers.forbiddenFruit) return false;
+                    if (c.id === 'orchard' && snake.modifiers.orchard) return false;
+                    if (c.id === 'sage' && snake.modifiers.doubleXp) return false;
+                    if (c.id === 'backup_server' && snake.modifiers.hasBackup) return false;
+                }
+                return true;
+            });
+            
+            if (availableCards.length > 0) return availableCards[Math.floor(Math.random() * availableCards.length)];
+        }
+        
+        let fallbackPool = CARD_POOL.filter(c => !excludeIds || !excludeIds.has(c.id));
+        if(fallbackPool.length > 0) return fallbackPool[Math.floor(Math.random() * fallbackPool.length)];
+        return CARD_POOL[0];
+    }
+
+    function renderCards(cards) {
+        cardsContainer.innerHTML = '';
+        cards.forEach(card => {
+            const el = document.createElement('div'); el.className = 'card'; el.dataset.rarity = card.rarity;
+            el.innerHTML = `<div><div class="card-title">${card.title}</div><div class="card-desc">${card.desc}</div></div><div class="card-type">${card.type}</div>`;
+            el.onclick = () => selectCard(card);
+            cardsContainer.appendChild(el);
+        });
+        upgradeScreen.style.display = 'flex';
+    }
+    function selectCard(card) {
+        card.apply(); 
+        
+        if(!state.sessionStats) state.sessionStats = { cardsPicked: [], unlockedThisSession: [] };
+        if(!state.sessionStats.cardsPicked) state.sessionStats.cardsPicked = [];
+        
+        state.sessionStats.cardsPicked.push(card.id);
+        if(card.rarity === 'legendary') unlockAchievement('legend');
+        if(card.rarity === 'risk') unlockAchievement('risky');
+        if(card.id === 'sacrificial' && snake.body.length < 5) unlockAchievement('suicide');
+        if(card.unique) {
+            if(!state.sessionStats.uniqueCards) state.sessionStats.uniqueCards = 0;
+            state.sessionStats.uniqueCards++;
+        }
+
+        upgradeScreen.style.display = 'none'; state.mode = 'PLAYING'; state.lastTime = performance.now(); updateUI();
+        if(state.pendingEvent === 'LASERS') { initLasers(); state.pendingEvent = null; }
+    }
+
+    function tryGameOver() {
+        if(snake.modifiers.hasBackup) {
+            snake.modifiers.hasBackup = false; snake.body = [{x: 10, y: 10}, {x: 10, y: 11}, {x: 10, y: 12}]; snake.dir = {x: 0, y: -1}; snake.nextDir = {x: 0, y: -1}; snake.modifiers.invulnerable = 2000; snake.modifiers.ghostTailCount = 0; deadPixelTrail = [];
+            addStatus('SİSTEM GERİ YÜKLENDİ', 'positive'); centerAlert.innerText = "YEDEK SUNUCU"; centerAlert.style.display = 'block'; setTimeout(() => centerAlert.style.display = 'none', 2000);
+        } else {
+            state.mode = 'ACHIEVEMENT'; 
+            checkMobileControlsVisibility();
+            stopMusic(); // Stop background music immediately
+            playSound('death'); // Play death sound
+            
+            if(state.score > highScore) {
+                highScore = state.score;
+                localStorage.setItem('neonSnakeHighScore', highScore);
+                newRecordBadge.style.display = 'block';
+            } else newRecordBadge.style.display = 'none';
+
+            checkEndGameAchievements().then(() => {
+                state.mode = 'GAMEOVER';
+                checkMobileControlsVisibility();
+                finalScoreEl.innerText = state.score; 
+                finalTimeEl.innerText = (state.totalTimePlayed/1000).toFixed(1); 
+                gameOverScreen.style.display = 'flex';
+            });
+        }
+    }
+
+    function resetGame() { 
+        startMusic(); // Restart background music loop
+        init(); 
+    }
+    function addStatus(msg, type) { const div = document.createElement('div'); div.className = `status-msg ${type}`; div.innerText = msg; statusContainer.appendChild(div); setTimeout(()=>div.remove(), 2000); }
+    
+    function updateUI() { 
+        scoreEl.innerText = state.score; 
+        let baseMult = 1 + state.scoreMultiplier;
+        let wallBonus = snake.modifiers.wallActive ? Math.pow(2, snake.modifiers.wallThickness) : 1;
+        let pixelBonus = snake.modifiers.deadPixelsTimer > 0 ? 2 : 1;
+        let effectiveMult = baseMult * wallBonus * pixelBonus;
+        multEl.innerText = effectiveMult.toFixed(2); 
+        
+        let isDanger = snake.modifiers.wallActive || snake.modifiers.deadPixelsTimer > 0;
+        if (isDanger) {
+            multBox.style.borderColor = '#ff0000'; multBox.style.color = '#ff0000'; multBox.style.boxShadow = '0 0 10px #ff0000';
+        } else {
+            multBox.style.borderColor = '#bd00ff'; multBox.style.color = '#bd00ff'; multBox.style.boxShadow = 'none';
+        }
+        levelEl.innerText = state.level; xpEl.innerText = `${state.xp}/${state.xpToNextLevel}`; 
+    } 
+    
+    function draw() {
+        ctx.fillStyle = '#0a0a0a'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        if (lasers.active) {
+            lasers.lines.forEach(line => {
+                if (lasers.phase === 'CHARGE') {
+                    ctx.fillStyle = 'rgba(255, 0, 0, 0.3)';
+                    line.type === 'row' ? ctx.fillRect(0, line.index*gridSize+8, canvas.width, 4) : ctx.fillRect(line.index*gridSize+8, 0, 4, canvas.height);
+                } else if (lasers.phase === 'FIRE') {
+                    ctx.fillStyle = Math.random()>0.5 ? '#fff' : '#f00'; ctx.shadowBlur = 30; ctx.shadowColor = '#f00';
+                    line.type === 'row' ? ctx.fillRect(0, line.index*gridSize, canvas.width, gridSize) : ctx.fillRect(line.index*gridSize, 0, gridSize, canvas.height); ctx.shadowBlur = 0;
+                }
+            });
+        }
+
+        if (snake.modifiers.wallActive) {
+            const t = snake.modifiers.wallThickness; const w = canvas.width; const h = canvas.height; const gs = gridSize;
+            const pulse = (Math.sin(performance.now()/100)+1)/2;
+            ctx.fillStyle = `rgba(255, 0, 85, ${0.3+(pulse*0.4)})`; ctx.shadowBlur = 20; ctx.shadowColor = '#ff0055';
+            ctx.fillRect(0,0,w,t*gs); ctx.fillRect(0,h-(t*gs),w,t*gs); ctx.fillRect(0,0,t*gs,h); ctx.fillRect(w-(t*gs),0,t*gs,h); ctx.shadowBlur = 0;
+        } else { ctx.strokeStyle = '#111'; ctx.strokeRect(0,0,canvas.width, canvas.height); }
+
+        // Dead Pixel Trail (Silhouette Style)
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#ff0000';
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = '#ff0000';
+        deadPixelTrail.forEach(p => { 
+            ctx.strokeRect(p.x*gridSize + 2, p.y*gridSize + 2, gridSize - 4, gridSize - 4); 
+        });
+        ctx.lineWidth = 1; 
+        ctx.shadowBlur = 0;
+
+        foods.forEach(f => {
+            ctx.fillStyle = '#00ff88'; ctx.shadowBlur = 15; ctx.shadowColor = '#00ff88'; 
+            ctx.fillRect(f.x*gridSize, f.y*gridSize, gridSize-2, gridSize-2);
+        });
+
+        // Cyberpunk Apple
+        apples.forEach(a => {
+            let ax = a.x*gridSize; let ay = a.y*gridSize; let size = gridSize-2;
+            ctx.fillStyle = '#ff0055'; ctx.shadowBlur = 15; ctx.shadowColor = '#ff0055';
+            // Main body
+            ctx.fillRect(ax + 4, ay + 4, size - 8, size - 8);
+            // Glitch/Leaf
+            ctx.fillStyle = '#00ff88'; 
+            ctx.fillRect(ax + size/2, ay, 4, 4);
+        });
+        
+        coins.forEach(c => { ctx.fillStyle = '#f5ff00'; ctx.shadowColor = '#f5ff00'; ctx.fillRect(c.x*gridSize+4, c.y*gridSize+4, gridSize-8, gridSize-8); }); ctx.shadowBlur = 0;
+
+        snake.body.forEach((part, index) => {
+            if(snake.modifiers.invulnerable > 0 && Math.floor(Date.now()/100)%2===0) return;
+            if (index === 0) { ctx.fillStyle = '#fff'; ctx.shadowBlur = 20; ctx.shadowColor = '#00d2ff'; } 
+            else { 
+                ctx.fillStyle = '#00d2ff'; ctx.shadowBlur = 5; 
+                if (snake.modifiers.brittleTail && index > snake.body.length / 2) {
+                    ctx.fillStyle = '#ff9900';
+                }
+                if (snake.modifiers.ghostTailCount > 0 && index >= snake.body.length - snake.modifiers.ghostTailCount) { 
+                    ctx.fillStyle = '#555'; ctx.globalAlpha = 0.4; ctx.shadowBlur = 0; ctx.strokeStyle = '#00d2ff'; ctx.strokeRect(part.x*gridSize, part.y*gridSize, gridSize-2, gridSize-2); 
+                } 
+            }
+            if (!(snake.modifiers.ghostTailCount > 0 && index >= snake.body.length - snake.modifiers.ghostTailCount)) { ctx.fillRect(part.x*gridSize, part.y*gridSize, gridSize-2, gridSize-2); }
+            ctx.globalAlpha = 1.0;
+        });
+
+        particles.forEach((p) => { ctx.fillStyle = p.color; ctx.globalAlpha = Math.max(0, p.life); ctx.fillRect(p.x, p.y, 3, 3); }); ctx.globalAlpha = 1.0;
+    }
+    
+    function triggerShake() { wrapper.classList.add('shake'); setTimeout(()=>wrapper.classList.remove('shake'), 500); }
+    function createParticles(x, y, color) { for(let i=0; i<6; i++) particles.push({ x: x*gridSize+gridSize/2, y: y*gridSize+gridSize/2, vx: (Math.random()-0.5)*5, vy: (Math.random()-0.5)*5, life: 1.0, color: color }); }
+
+    // Initial setup
+    mainMenu.style.display = 'flex';
+    gameCanvas.style.filter = 'blur(5px)';
+    checkMobileControlsVisibility();
+</script>
+</body>
+</html>

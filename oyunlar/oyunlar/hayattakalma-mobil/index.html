@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Hayatta Kalma Oyunu - Mobil</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="mobile-container">
+        <canvas id="game-canvas"></canvas>
+        <canvas id="minimap-canvas" width="150" height="150"></canvas>
+
+        <div id="game-ui-overlay">
+            <div id="status-bars-container">
+                <div class="bar-container"><div id="health-bar"></div><span class="bar-label">Can</span></div>
+                <div class="bar-container"><div id="hunger-bar"></div><span class="bar-label">Açlık</span></div>
+                <div class="bar-container"><div id="xp-bar"></div><span class="bar-label">XP</span></div>
+            </div>
+            <div id="d-pad-container">
+                <button id="d-pad-up" class="d-pad-btn">▲</button>
+                <button id="d-pad-left" class="d-pad-btn">◀</button>
+                <button id="action-btn">⦿</button>
+                <button id="d-pad-right" class="d-pad-btn">▶</button>
+                <button id="d-pad-down" class="d-pad-btn">▼</button>
+            </div>
+            <div id="menu-buttons-container">
+                <button id="toggle-minimap-btn" class="menu-btn">🗺️</button>
+                <button id="open-inventory-btn" class="menu-btn">Envanter</button>
+                <button id="open-crafting-btn" class="menu-btn">Üretim</button>
+            </div>
+        </div>
+
+        <div id="message-container"></div>
+        <div id="inventory-modal" class="modal hidden">
+            <div class="modal-content">
+                <span id="close-inventory-btn" class="close-btn">&times;</span>
+                <h2>Envanter</h2>
+                <div id="inventory-list"></div>
+            </div>
+        </div>
+
+        <div id="crafting-status-modal" class="modal hidden">
+            <div class="modal-content">
+                <span id="close-crafting-btn" class="close-btn">&times;</span>
+                <h2>Üretim & Durum</h2>
+                <div id="modal-body">
+                    <div id="crafting-section">
+                        <h3>Üretim</h3>
+                        <div id="crafting-list"></div>
+                    </div>
+                    <div id="status-section">
+                        <h3>Durum</h3>
+                        <div class="stat"><span>Zaman:</span><span id="time-stat">Gündüz</span></div>
+                        <div class="stat"><span>Seviye:</span><span id="level-stat">1</span></div>
+                        
+                        <button id="open-skill-tree-btn" class="menu-btn" style="width: 100%; margin-top: 15px; box-sizing: border-box;">Yetenekler</button>
+                        <button id="guide-btn-mobil" class="menu-btn" style="width: 100%; margin-top: 10px; box-sizing: border-box;">Rehber</button>
+                        
+                        <h3 style="margin-top: 20px;">Oyun</h3>
+                        <div class="game-actions">
+                            <button id="save-game-btn">Kaydet</button>
+                            <button id="load-game-btn">Yükle</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="skill-tree-modal" class="modal hidden">
+            <div class="modal-content">
+                <span id="close-skill-tree-btn" class="close-btn">&times;</span>
+                <h2>Yetenek Ağacı</h2>
+                <p style="text-align:center; margin-bottom:10px; font-weight: bold;">Kalan Puan: <span id="skill-points-stat">0</span></p>
+                <div id="skill-tree-container" style="overflow-y: auto; padding: 0 10px 10px 10px;"></div>
+            </div>
+        </div>
+
+        <div id="trade-modal" class="modal hidden">
+            <div class="modal-content">
+                <span id="close-trade-btn" class="close-btn">&times;</span>
+                <h2>Ticaret</h2>
+                <div id="trade-container">
+                    <div id="trade-player-offer" class="trade-box">
+                        <h3>Senin Teklifin</h3>
+                        <div id="trade-wants"></div>
+                        <button id="trade-give-btn" class="modal-btn">Ver</button>
+                    </div>
+                    <div class="trade-arrow">⇄</div>
+                    <div id="trade-npc-offer" class="trade-box">
+                        <h3>Köylünün Teklifi</h3>
+                        <div id="trade-offers"></div>
+                        <button id="trade-take-btn" class="modal-btn">Al</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="furnace-modal" class="modal hidden">
+            <div class="modal-content large">
+                <span id="close-furnace-btn" class="close-btn">&times;</span>
+                <h2>Maden Fırını</h2>
+                <div class="furnace-container"></div>
+            </div>
+        </div>
+        <div id="game-over" class="hidden"><p>OYUN BİTTİ</p></div>
+        <div id="build-menu" class="hidden"></div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

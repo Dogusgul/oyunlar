@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Lezzet Durağı ☕ v2.1</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div id="main-menu-modal" class="modal" style="display: flex;">
+    <div class="modal-content" style="text-align: center;">
+        <h1>Lezzet Durağı ☕</h1>
+        <p>Kafeni işletmeye hazır mısın?</p>
+        <button class="action-button" id="start-game-btn" style="padding: 15px 30px; font-size: 20px;">Oyuna Başla!</button>
+    </div>
+  </div>
+
+  <div id="game-container" class="game-container">
+    <h1>Lezzet Durağı ☕</h1>
+    <div class="info-bar">
+      <div id="status-indicators">
+        <div id="day-info">Gün: 1</div>
+        <div id="money">Para: 100 TL</div>
+        <div id="level-info">Seviye: 1</div>
+      </div>
+      <div id="xp-bar-container">
+        <div id="xp-bar"></div>
+        <div id="xp-bar-text">0/100 XP</div>
+      </div>
+      <div id="reputation-bar-container">
+        <div id="reputation-bar"></div>
+        <div id="reputation-bar-text">İtibar: Yeni (0/100)</div>
+      </div>
+    </div>
+    <div id="message-area"></div>
+
+    <div class="tabs">
+        <button class="action-button" onclick="openModal('upgrades-modal')">Geliştirmeler</button>
+        <button class="action-button" onclick="openModal('staff-modal')">Personel</button>
+        <button class="action-button" onclick="openModal('decorations-modal')">Dekorasyon</button>
+        <button class="action-button" onclick="openModal('test-kitchen-modal')">Deneme Mutfağı</button>
+        <button class="action-button" onclick="openModal('catering-modal')">Catering İlanları</button>
+    </div>
+
+    <div id="event-area" class="section" style="display: none;">
+      <h3 id="event-title">Yaklaşan Etkinlik</h3>
+      <p id="event-text"></p>
+      <p>Durum: <span id="event-status"></span></p>
+      <p>Ödül: <span id="event-reward"></span></p>
+    </div>
+
+    <div id="daily-quest-area" class="section">
+      <h3>Günün Görevi</h3>
+      <p id="quest-text"></p>
+      <p>İlerleme: <span id="quest-progress"></span></p>
+      <p>Ödül: <span id="quest-reward"></span></p>
+    </div>
+
+    <div class="section">
+      <h2>Pazar</h2>
+      <button class="action-button" style="width:100%; padding: 15px;" onclick="openModal('market-modal')">Yerel Pazarı Ziyaret Et</button>
+    </div>
+
+    <div class="section">
+        <h2>Malzemelerim</h2>
+        <div id="player-materials-list" class="item-list">Stokta malzeme yok.</div>
+    </div>
+
+    <div class="section">
+      <h2>Menü (Keşfedilen Tarifler)</h2>
+      <div id="menu-list" class="item-list"></div>
+    </div>
+
+    <div class="section">
+        <h2>Hazır Ürünler</h2>
+        <div id="prepared-products-list" class="item-list">Hazır ürün yok.</div>
+    </div>
+
+    <div class="section customer-area">
+      <h2>Masalar</h2>
+      <div id="tables-container" class="table-area"></div>
+    </div>
+  </div>
+
+  <div id="upgrades-modal" class="modal"><div class="modal-content"><span class="close-btn" onclick="closeModal('upgrades-modal')">&times;</span><h2>Dükkan Geliştirmeleri</h2><div id="upgrades-list"></div></div></div>
+  <div id="decorations-modal" class="modal"><div class="modal-content"><span class="close-btn" onclick="closeModal('decorations-modal')">&times;</span><h2>Kafe Dekorasyonu</h2><div id="decorations-list"></div></div></div>
+  <div id="staff-modal" class="modal"><div class="modal-content wide"><span class="close-btn" onclick="closeModal('staff-modal')">&times;</span><h2>Personel Yönetimi</h2><div id="staff-list"></div><hr><h3>Müsait Personeller</h3><div id="hire-staff-list"></div></div></div>
+  <div id="market-modal" class="modal"><div class="modal-content wide"><span class="close-btn" onclick="closeModal('market-modal')">&times;</span><h2>Yerel Pazar</h2><p>Buradaki fiyatlar her gün değişir. Fırsatları kolla!</p><div id="market-list"></div></div></div>
+  <div id="catering-modal" class="modal"><div class="modal-content wide"><span class="close-btn" onclick="closeModal('catering-modal')">&times;</span><h2>Catering İlan Panosu</h2><p>İtibarın arttıkça buraya yeni işler düşer. Büyük işler, büyük paralar!</p><div id="catering-list"></div></div></div>
+
+  <div id="test-kitchen-modal" class="modal">
+      <div class="modal-content">
+          <span class="close-btn" onclick="closeModal('test-kitchen-modal')">&times;</span>
+          <h2>Deneme Mutfağı</h2>
+          <p>Yeni tarifler keşfetmek için kutucuklara tıklayarak malzeme ekle!</p>
+          <div id="test-kitchen-slots">
+              <div class="test-slot" id="test-slot-1" onclick="openMaterialSelectionModal(1)">+</div>
+              <div class="test-slot" id="test-slot-2" onclick="openMaterialSelectionModal(2)">+</div>
+              <div class="test-slot" id="test-slot-3" onclick="openMaterialSelectionModal(3)">+</div>
+          </div>
+          <button class="action-button" onclick="combineIngredients()">Birleştir ve Dene!</button>
+          <button onclick="clearTestSlots()">Temizle</button>
+          <div id="test-kitchen-result" style="margin-top:15px;"></div>
+      </div>
+  </div>
+
+  <div id="material-selection-modal" class="modal">
+      <div class="modal-content">
+          <span class="close-btn" onclick="closeModal('material-selection-modal')">&times;</span>
+          <h2>Malzeme Seç</h2>
+          <div id="material-selection-list" class="item-list"></div>
+      </div>
+  </div>
+
+  <audio id="arkaplanMuzik" loop><source src="arkaplan-muzik.mp3" type="audio/mpeg">Tarayıcınız ses etiketini desteklemiyor.</audio>
+  
+  <script src="script.js"></script>
+</body>
+</html>

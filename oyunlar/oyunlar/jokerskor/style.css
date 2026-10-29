@@ -1,0 +1,497 @@
+/* --- 1. Global ve Font Ayarları --- */
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;700&family=Open+Sans:wght@400;600&display=swap');
+
+:root {
+    --font-ui: 'Open Sans', sans-serif;
+    --font-display: 'Roboto Slab', serif;
+
+    --color-bg-dark: #1a1a1a;
+    --color-bg-medium: #2c2c2c;
+    --color-bg-light: #4a4a4a;
+    --color-felt-green: #1E4D2B;
+    --color-text: #f5f5f5;
+    --color-text-dark: #aaaaaa;
+
+    --color-accent-gold: #F1C40F;
+    --color-accent-green: #2ECC71;
+    --color-accent-red: #E74C3C;
+    --color-accent-blue: #3498DB;
+    --color-accent-purple: #9B59B6; /* Yeni: Tüketilebilir kartlar için */
+
+    /* Meyve renkleri */
+    --color-orange: #FFA500;
+    --color-purple: #8e44ad;
+    --color-strawberry-red: #FF4136;
+    --color-pear-green: #90EE90;
+    --color-dark-green-border: #27ae60;
+    --color-dark-purple-border: #5e3370;
+
+    /* Kart boyutları - Varsayılan (Masaüstü) */
+    --card-width: 90px;
+    --card-height: 130px;
+    --card-font-size: 1.1rem; /* Köşe yazı boyutu */
+    --center-suit-size: 2.8rem; /* Orta emoji boyutu */
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: var(--font-ui);
+    background-color: var(--color-bg-dark);
+    color: var(--color-text);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    overflow: hidden; /* Dikey scroll'u engelle */
+}
+
+/* --- 2. Ana Konteyner --- */
+#game-container {
+    width: 100%;
+    max-width: 1200px;
+    height: 95vh;
+    max-height: 850px;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--color-bg-medium);
+    border: 2px solid var(--color-bg-light);
+    border-radius: 10px;
+    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.3);
+    padding: 15px;
+    gap: 10px;
+    position: relative;
+    overflow: hidden;
+}
+
+.area-label {
+    font-family: var(--font-display);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    color: var(--color-text-dark);
+    margin-bottom: 5px;
+    padding-left: 5px;
+    white-space: nowrap;
+}
+
+/* --- 3. Üst Bilgi Çubuğu ve Rehber Butonu --- */
+#how-to-play-button {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    z-index: 50;
+    padding: 5px 10px;
+    font-size: 1.5rem;
+    min-width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    line-height: 1;
+}
+.icon-button {
+    background-color: var(--color-bg-light);
+    color: var(--color-text);
+    box-shadow: 0 2px 0 #333;
+}
+.icon-button:hover:not(:disabled) {
+     background-color: var(--color-bg-medium);
+     transform: translateY(-1px);
+     box-shadow: 0 3px 0 #333;
+}
+.icon-button:active:not(:disabled) {
+    transform: translateY(1px);
+    box-shadow: 0 1px 0 #333;
+}
+
+
+#stats-bar {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    flex-shrink: 0;
+    margin-right: 50px;
+}
+
+.stat-box {
+    background-color: var(--color-bg-dark);
+    border-radius: 8px;
+    padding: 8px 12px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border: 1px solid var(--color-bg-light);
+}
+
+.stat-box .label { font-size: 0.8rem; color: var(--color-text-dark); text-transform: uppercase; }
+.stat-box .value { font-family: var(--font-display); font-size: 1.8rem; font-weight: 700; color: var(--color-text); }
+#money-display.value { color: var(--color-accent-green); }
+#discards-left.value { color: var(--color-accent-blue); }
+#score-info { flex-grow: 1.5; position: relative; padding-bottom: 25px; }
+#current-score-bar-container { width: 100%; height: 12px; background-color: #111; border-radius: 10px; border: 1px solid var(--color-bg-light); overflow: hidden; margin-top: 5px; position: absolute; bottom: 8px; left: 0; padding: 1px; }
+#current-score-bar { width: 0%; height: 100%; background: linear-gradient(90deg, var(--color-accent-blue), var(--color-accent-green)); border-radius: 7px; transition: width 0.5s ease-out; }
+#current-score { position: absolute; bottom: 5px; font-size: 1rem; color: var(--color-text); z-index: 2; }
+#target-score { position: absolute; top: 5px; right: 12px; font-size: 1rem; color: var(--color-text-dark); }
+
+/* --- 4. Joker ve Tüketilebilir Alanlar (YENİ) --- */
+#areas-container {
+    display: flex;
+    gap: 10px;
+    flex-shrink: 0;
+    min-height: 80px;
+}
+
+.area-box {
+    background: rgba(0,0,0,0.2);
+    border-radius: 8px;
+    padding: 8px;
+    border: 1px dashed var(--color-bg-light);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0; /* Flex item taşmasını önler */
+}
+
+#joker-area, #consumable-area {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+    flex-grow: 1;
+}
+
+/* Joker Kart Stili */
+.joker-card {
+    background: #333;
+    border: 2px solid var(--color-accent-gold);
+    border-radius: 6px;
+    padding: 6px;
+    width: 100px;
+    height: 55px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-align: center;
+    color: var(--color-accent-gold);
+    box-shadow: 0 0 8px rgba(241, 196, 15, 0.3);
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: default;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Tüketilebilir Kart Stili (YENİ) */
+.consumable-card {
+    background: #2a2030;
+    border: 2px solid var(--color-accent-purple);
+    border-radius: 6px;
+    padding: 6px;
+    width: 90px; /* Biraz daha küçük */
+    height: 55px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-align: center;
+    color: #D2B4DE;
+    box-shadow: 0 0 5px rgba(155, 89, 182, 0.3);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer; /* Tıklanabilir */
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.consumable-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 10px rgba(155, 89, 182, 0.5);
+    background: #3e2e46;
+    color: #fff;
+}
+
+.consumable-card:active {
+    transform: translateY(-1px);
+}
+
+.consumable-card.used {
+    animation: consume-anim 0.5s forwards;
+}
+
+@keyframes consume-anim {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.2); opacity: 0.5; background-color: #fff; }
+    100% { transform: scale(0); opacity: 0; }
+}
+
+.placeholder-text {
+    font-size: 0.8rem;
+    color: rgba(255,255,255,0.2);
+    width: 100%;
+    text-align: center;
+    font-style: italic;
+}
+
+/* --- 5. Oyun Alanı --- */
+#game-board { display: flex; flex-direction: column; flex-grow: 1; gap: 10px; min-height: 0; position: relative; }
+#play-area-container, #hand-area-container { background-color: var(--color-felt-green); border: 2px solid #143a20; border-radius: 8px; padding: 10px; display: flex; flex-direction: column; }
+#play-area-container { min-height: calc(var(--card-height) + 20px); flex-shrink: 0; position: relative; }
+#hand-area-container { flex-grow: 1; min-height: calc(var(--card-height) + 20px); }
+#play-area, #hand-area { display: flex; justify-content: center; align-items: center; gap: 8px; flex-wrap: wrap; height: 100%; }
+
+/* --- 6. Kart Tasarımı (Meyve Teması) --- */
+.card { width: var(--card-width); height: var(--card-height); background-color: #fdfdfd; border: 1px solid #c0c0c0; border-radius: 8px; position: relative; font-family: var(--font-display); font-weight: 700; box-shadow: 0 2px 5px rgba(0,0,0,0.3); cursor: pointer; transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s ease, background-color 0.2s, border-color 0.2s; user-select: none; backface-visibility: hidden; }
+.card:hover { transform: translateY(-6px); box-shadow: 0 6px 12px rgba(0,0,0,0.4); }
+.card .value { position: absolute; font-size: var(--card-font-size); line-height: 1; display: flex; align-items: center; gap: 1px; white-space: nowrap; }
+.card .corner-suit { font-size: 0.9em; }
+.card .center-suit { position: absolute; font-size: var(--center-suit-size); top: 50%; left: 50%; transform: translate(-50%, -50%); opacity: 0.9; }
+.card .value.top { top: 5px; left: 7px; }
+.card .value.bottom { bottom: 5px; right: 7px; transform: rotate(180deg); }
+.card .value.bottom .corner-suit { display: inline-block; transform: rotate(180deg); }
+.card.suit-orange .corner-suit, .card.suit-orange .center-suit { color: var(--color-orange, orange); }
+.card.suit-red .corner-suit, .card.suit-red .center-suit { color: var(--color-strawberry-red, #FF4136); }
+.card.suit-purple .corner-suit, .card.suit-purple .center-suit { color: var(--color-purple, purple); }
+.card.suit-green .corner-suit, .card.suit-green .center-suit { color: var(--color-pear-green, lightgreen); }
+.card.suit-orange .value, .card.suit-red .value { color: var(--color-strawberry-red, #FF4136); }
+.card.suit-purple .value, .card.suit-green .value { color: #222; }
+.card.value-J { background-color: hsl(120, 60%, 97%); border: 2px solid var(--color-dark-green-border); }
+.card.value-J .center-suit::before { content: '🌿'; font-size: 0.7em; position: absolute; top: -12px; left: -12px; opacity: 0.7; transform: rotate(-30deg); }
+.card.value-Q { background-color: hsl(0, 100%, 98%); border: 2px solid var(--color-strawberry-red); }
+.card.value-Q .center-suit::before { content: '✨'; font-size: 0.8em; position: absolute; top: -10px; right: -10px; opacity: 0.8; }
+.card.value-K { background-color: #fffacd; border: 3px double var(--color-dark-purple-border); }
+.card.value-K .center-suit::before { content: '👑'; font-size: 0.8em; position: absolute; bottom: -15px; left: 50%; transform: translateX(-50%); opacity: 0.7; }
+.card.value-A { background-color: #fdfdfd; border: 3px solid var(--color-accent-gold); }
+.card.value-A .center-suit::before { content: '🟡'; font-size: 0.7em; position: absolute; bottom: -12px; right: -12px; opacity: 0.8; }
+#play-area .card { transform: translateY(-8px); border: 3px solid var(--color-accent-gold) !important; box-shadow: 0 0 12px var(--color-accent-gold); }
+.card.fly-in { animation: fly-in-from-deck 0.5s ease-out forwards; }
+/* Wild Card Style */
+.card.wild-card {
+    background: linear-gradient(135deg, #ffcccc, #ccffcc, #ccccff, #ffffcc);
+    border: 2px solid transparent;
+    background-clip: padding-box;
+    position: relative;
+}
+.card.wild-card::after {
+    content: '';
+    position: absolute;
+    top: -2px; bottom: -2px; left: -2px; right: -2px;
+    background: linear-gradient(45deg, red, orange, yellow, green, blue, indigo, violet);
+    z-index: -1;
+    border-radius: 8px;
+}
+.card.wild-card .center-suit {
+    filter: drop-shadow(0 0 5px white);
+}
+
+
+/* --- 7. Kontroller ve Düğmeler --- */
+#controls { display: flex; justify-content: center; align-items: center; gap: 15px; padding: 8px 0; flex-shrink: 0; flex-wrap: wrap; }
+#hand-evaluation-container { flex-basis: 100%; text-align: center; min-height: 1.5em; margin-bottom: 5px; }
+.hand-eval-text { font-family: var(--font-display); font-size: 1.1rem; font-weight: 700; }
+.rank-default { color: var(--color-text-dark); }
+.rank-low { color: #f5f5f5; }
+.rank-medium { color: var(--color-accent-blue); }
+.rank-high { color: var(--color-accent-gold); }
+.rank-epic { color: var(--color-accent-red); animation: pulse-red 1s infinite; }
+.rank-error { color: var(--color-accent-red); }
+.game-button { font-family: var(--font-display); font-size: 1rem; font-weight: 700; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; background-color: var(--color-accent-green); color: var(--color-bg-dark); text-transform: uppercase; box-shadow: 0 3px 0 #1B8349; transition: all 0.1s ease-in-out; }
+.game-button:hover:not(:disabled) { background-color: #38E384; transform: translateY(-1px); box-shadow: 0 4px 0 #1B8349; }
+.game-button:active:not(:disabled) { transform: translateY(1px); box-shadow: 0 2px 0 #1B8349; }
+.game-button:disabled { background-color: var(--color-bg-light); color: var(--color-text-dark); cursor: not-allowed; box-shadow: 0 3px 0 #333; }
+.game-button.alt { background-color: var(--color-accent-red); box-shadow: 0 3px 0 #A13326; }
+.game-button.alt:hover:not(:disabled) { background-color: #F06456; box-shadow: 0 4px 0 #A13326; }
+.game-button.alt:active:not(:disabled) { transform: translateY(1px); box-shadow: 0 2px 0 #A13326; }
+#discard-hand-button { background-color: var(--color-accent-blue); box-shadow: 0 3px 0 #2570A5; }
+#discard-hand-button:hover:not(:disabled) { background-color: #5FBAF5; box-shadow: 0 4px 0 #2570A5; }
+#discard-hand-button:active:not(:disabled) { transform: translateY(1px); box-shadow: 0 2px 0 #2570A5; }
+#play-hand-button:not(:disabled) { animation: button-pulse 1.5s infinite ease-in-out; }
+#play-hand-button:not(:disabled):hover, #play-hand-button:not(:disabled):active { animation: none; }
+.small-button { padding: 8px 15px; font-size: 0.9rem; }
+
+/* --- 8. Modal Ekranlar --- */
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.85); justify-content: center; align-items: center; z-index: 100; opacity: 0; visibility: hidden; transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out; display: flex; padding: 10px; }
+.modal-content { background-color: var(--color-bg-medium); padding: 20px; border-radius: 10px; border: 2px solid var(--color-accent-gold); box-shadow: 0 0 20px rgba(241, 196, 15, 0.2); text-align: center; width: 100%; max-width: 95%; transform: scale(0.9); transition: transform 0.3s ease-out 0.1s; max-height: 90vh; overflow-y: auto; pointer-events: auto; }
+.small-modal { max-width: 400px; }
+.modal-buttons { display: flex; justify-content: center; gap: 15px; margin-top: 20px; }
+.modal-overlay.show { opacity: 1; visibility: visible; }
+.modal-overlay.show .modal-content { transform: scale(1); }
+.modal-content h2 { font-family: var(--font-display); font-size: 1.8rem; color: var(--color-accent-green); margin-bottom: 10px; }
+#game-over-modal h2 { color: var(--color-accent-red); }
+.modal-content p { font-size: 1rem; margin-bottom: 12px; color: var(--color-text); line-height: 1.4; }
+
+.modal-content .current-money { font-size: 1.1rem; color: var(--color-accent-green); font-weight: bold; margin-bottom: 20px; }
+#upgrade-options { display: flex; justify-content: center; gap: 15px; margin: 20px 0; flex-wrap: wrap; }
+.joker-card.option, .consumable-card.option { width: 150px; height: 190px; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; transition: all 0.2s ease; background: #222; }
+.consumable-card.option { border-color: var(--color-accent-purple); box-shadow: 0 0 10px rgba(155, 89, 182, 0.2); }
+.joker-card.option:hover, .consumable-card.option:hover { transform: scale(1.05); box-shadow: 0 0 20px var(--color-accent-gold); }
+.consumable-card.option:hover { box-shadow: 0 0 20px var(--color-accent-purple); }
+
+.joker-card.option h4, .consumable-card.option h4 { font-family: var(--font-display); font-size: 1rem; margin-bottom: 10px; }
+.joker-card.option h4 span, .consumable-card.option h4 span { font-size: 0.9em; color: var(--color-accent-green); margin-left: 5px; }
+.joker-card.option p, .consumable-card.option p { font-size: 0.8rem; color: var(--color-text-dark); padding: 0 8px; }
+
+.joker-card.option.disabled, .consumable-card.option.disabled { opacity: 0.5; cursor: not-allowed; border-color: var(--color-bg-light); color: var(--color-text-dark); }
+.joker-card.option.disabled:hover, .consumable-card.option.disabled:hover { transform: none; box-shadow: none; }
+.joker-card.option.disabled h4 span, .consumable-card.option.disabled h4 span { color: var(--color-accent-red); }
+
+
+/* Tutorial Modalı */
+#how-to-play-modal { background-color: transparent; pointer-events: none; }
+#how-to-play-modal .modal-content { pointer-events: auto; }
+.tutorial-content { text-align: left; max-width: 700px; }
+.tutorial-content h2 { text-align: center; }
+#tutorial-steps { margin-bottom: 20px; min-height: 200px; padding: 12px; background-color: rgba(0,0,0,0.1); border-radius: 5px; }
+.tutorial-step h3 { font-family: var(--font-display); color: var(--color-accent-gold); margin-bottom: 8px; font-size: 1.2rem; }
+.tutorial-step ul { margin-left: 20px; margin-bottom: 12px; }
+.tutorial-navigation { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; padding-top: 12px; border-top: 1px solid var(--color-bg-light); }
+#tutorial-step-indicator { font-size: 0.85rem; color: var(--color-text-dark); }
+#toggle-examples-button { margin: 10px 0; background-color: var(--color-accent-blue); box-shadow: 0 3px 0 #2570A5; }
+#toggle-examples-button:hover:not(:disabled) { background-color: #5FBAF5; box-shadow: 0 4px 0 #2570A5;}
+#toggle-examples-button:active:not(:disabled) { transform: translateY(1px); box-shadow: 0 2px 0 #2570A5;}
+#tutorial-examples-container { padding: 10px; background-color: rgba(0,0,0,0.2); border-radius: 4px; margin-top: 5px; transition: max-height 0.5s ease-out, opacity 0.5s ease-out, padding 0.5s ease-out, margin 0.5s ease-out; max-height: 200px; overflow-y: auto; overflow-x: hidden; opacity: 1; }
+#tutorial-examples-container.hidden { max-height: 0; opacity: 0; padding-top: 0; padding-bottom: 0; margin-top: 0; overflow: hidden; }
+.example-hand { margin-bottom: 15px; }
+.example-hand strong { font-family: var(--font-display); color: var(--color-accent-gold); margin-right: 5px; display: block; margin-bottom: 3px; }
+.mini-card-row { display: flex; gap: 5px; }
+.mini-card { width: 35px; height: 50px; border-radius: 4px; display: flex; flex-direction: column; justify-content: center; align-items: center; font-family: var(--font-display); font-size: 0.9rem; font-weight: 700; background-color: #f0f0f0; border: 1px solid #ccc; padding: 2px; line-height: 1.1; overflow: hidden; text-align: center; flex-shrink: 0; }
+.mini-card span { display: block; }
+.mini-card.suit-orange { color: var(--color-orange, orange); border-color: var(--color-orange);}
+.mini-card.suit-red { color: var(--color-strawberry-red, #FF4136); border-color: var(--color-strawberry-red);}
+.mini-card.suit-purple { color: var(--color-purple, purple); border-color: var(--color-purple);}
+.mini-card.suit-green { color: var(--color-pear-green, lightgreen); border-color: var(--color-dark-green-border);}
+.mini-card.value-J { border-color: var(--color-dark-green-border); }
+.mini-card.value-Q { border-color: var(--color-strawberry-red); }
+.mini-card.value-K { border: 2px double var(--color-dark-purple-border); }
+.mini-card.value-A { border: 2px solid var(--color-accent-gold); }
+
+
+/* --- 9. Animasyonlar ve Vurgulama --- */
+.highlight-tutorial { outline: 2px dashed var(--color-accent-blue); outline-offset: 3px; border-radius: 8px; transition: outline 0.3s ease-in-out; }
+@keyframes fly-in-from-deck { from { opacity: 0; transform: translate(-300px, -200px) rotate(-45deg) scale(0.5); } to { opacity: 1; transform: translate(0, 0) rotate(0deg) scale(1); } }
+.scoring-text { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); font-family: var(--font-display); font-size: 2.5rem; font-weight: 700; color: var(--color-accent-gold); text-shadow: 0 0 5px #000, 0 0 10px var(--color-accent-gold); pointer-events: none; z-index: 200; animation: fly-to-score 1.2s ease-out forwards; }
+@keyframes fly-to-score { 0% { opacity: 1; transform: translate(-50%, -50%) scale(0.8); } 100% { opacity: 0; transform: translate(-50%, -250px) scale(1.5); } }
+@keyframes button-pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+.joker-card.activated { animation: joker-glow 0.8s ease-in-out; }
+@keyframes joker-glow { 0% { box-shadow: 0 0 10px rgba(241, 196, 15, 0.3); transform: scale(1); } 50% { box-shadow: 0 0 30px 10px var(--color-accent-gold); transform: scale(1.05); } 100% { box-shadow: 0 0 10px rgba(241, 196, 15, 0.3); transform: scale(1); } }
+@keyframes pulse-red { 0% { text-shadow: 0 0 5px var(--color-accent-red); } 50% { text-shadow: 0 0 20px var(--color-accent-red), 0 0 30px var(--color-accent-red); } 100% { text-shadow: 0 0 5px var(--color-accent-red); } }
+
+
+/* --- 10. Mobil Uyumluluk --- */
+@media (max-width: 768px) {
+    :root {
+        --card-width: 75px;
+        --card-height: 110px;
+        --card-font-size: 0.95rem;
+        --center-suit-size: 2.2rem;
+    }
+
+    #game-container {
+        height: 100svh;
+        max-height: none;
+        padding: 8px;
+        gap: 8px;
+    }
+
+    #how-to-play-button { top: 5px; right: 8px; min-width: 35px; height: 35px; font-size: 1.2rem; }
+    #stats-bar { gap: 5px; flex-wrap: wrap; justify-content: center; margin-right: 45px; }
+    .stat-box { padding: 5px 8px; min-width: 60px; flex-basis: auto; }
+    .stat-box .label { font-size: 0.7rem; }
+    .stat-box .value { font-size: 1.3rem; }
+    #score-info { flex-basis: 100%; order: -1; }
+    #current-score-bar-container { height: 10px; bottom: 5px; }
+    #current-score, #target-score { font-size: 0.9rem; }
+    
+    /* YENİ: Mobilde Alanlar (Areas) Düzeni */
+    #areas-container {
+        min-height: auto;
+        flex-direction: row; /* Yan yana kalabilir mi? Sığmazsa wrap olur */
+        flex-wrap: wrap;
+    }
+    .area-box {
+        min-width: 45%; /* Mobilde yan yana sığdırmaya çalış */
+        padding: 5px;
+    }
+    .joker-card { width: 85px; height: 40px; font-size: 0.7rem; padding: 4px; }
+    .consumable-card { width: 80px; height: 40px; font-size: 0.65rem; padding: 4px; }
+
+    #play-area, #hand-area { gap: 5px; }
+
+    /* Mobil Kontroller Sırası */
+    #stats-bar { order: 0; }
+    #areas-container { order: 1; }
+    #controls { order: 2; }
+    #game-board { order: 3; flex-grow: 1; }
+
+    #controls {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 0;
+        flex-shrink: 0;
+    }
+    #hand-evaluation-container {
+         flex-basis: 100%;
+         text-align: center;
+         min-height: 1.2em;
+         margin-bottom: 5px;
+    }
+
+    #game-board { min-height: 250px; }
+    #hand-area-container { flex-grow: 1; min-height: calc(var(--card-height) + 15px); }
+    #play-area-container { min-height: calc(var(--card-height) + 15px); }
+
+    .modal-content { padding: 15px; }
+    .modal-content h2 { font-size: 1.5rem; }
+    .modal-content p { font-size: 0.95rem; margin-bottom: 10px; }
+    .modal-buttons { gap: 10px; }
+    .joker-card.option, .consumable-card.option { width: 120px; height: 160px; }
+    .joker-card.option h4, .consumable-card.option h4 { font-size: 0.9rem; }
+    .joker-card.option h4 span, .consumable-card.option h4 span { font-size: 0.8em; }
+    .joker-card.option p, .consumable-card.option p { font-size: 0.75rem; }
+    
+    .tutorial-content { max-width: 100%; }
+    #tutorial-steps { min-height: 150px; padding: 10px; }
+    .tutorial-step h3 { font-size: 1.1rem; }
+    .tutorial-navigation { flex-wrap: wrap; justify-content: center; }
+    #tutorial-step-indicator { flex-basis: 100%; text-align: center; margin-bottom: 5px; }
+    #tutorial-examples-container { padding: 8px; max-height: 150px; }
+    .example-hand { margin-bottom: 10px; }
+    .mini-card-row { flex-wrap: wrap; gap: 3px; }
+    .mini-card { width: 30px; height: 45px; font-size: 0.8rem; }
+    .scoring-text { font-size: 2rem; }
+}
+
+@media (max-width: 380px) {
+     :root {
+        --card-width: 60px;
+        --card-height: 90px;
+        --card-font-size: 0.8rem;
+        --center-suit-size: 1.8rem;
+    }
+    .stat-box .value { font-size: 1.1rem; }
+    /* #areas-container { min-height: 45px; } -> Eski koddan kalan, yeni yapı ile gerek yok */
+    .joker-card, .consumable-card { width: 70px; height: 35px; font-size: 0.65rem; }
+    .hand-eval-text { font-size: 0.9rem; }
+    .game-button { font-size: 0.8rem; padding: 6px 10px; }
+    .mini-card { width: 28px; height: 42px; font-size: 0.7rem; }
+
+    #controls { gap: 8px; }
+    #hand-evaluation-container { margin-bottom: 8px; }
+    #controls .game-button {
+         flex-basis: 45%;
+         padding: 8px 10px;
+    }
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+    body::after {
+        content: "Daha iyi bir deneyim için lütfen cihazınızı dikey kullanın.";
+        position: fixed; top: 0; left: 0; width: 100%; padding: 10px;
+        background-color: rgba(255, 200, 0, 0.9); color: black; text-align: center;
+        z-index: 200; font-size: 0.9rem;
+    }
+}
